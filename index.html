@@ -11,8 +11,8 @@
   canvas{display:block;width:100%;height:100%}
   .screen{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;background:rgba(11,21,34,.94);color:#f5e6c8;padding:16px;z-index:20}
   .screen.active{display:flex}
-  h1{font-size:32px;margin-bottom:4px;text-shadow:0 3px 10px rgba(0,0,0,.7);letter-spacing:1px}
-  .subtitle{font-size:14px;opacity:.8;margin-bottom:18px}
+  h1{font-size:32px;margin-bottom:4px;text-shadow:0 3px 10px rgba(0,0,0,.7)}
+  .subtitle{font-size:14px;opacity:.8;margin-bottom:18px;text-align:center}
   .btn{background:linear-gradient(180deg,#c9a66b,#a67c3d);color:#2c1810;border:none;padding:13px 32px;font-size:18px;font-family:inherit;font-weight:bold;border-radius:12px;margin:7px 0;min-width:210px;box-shadow:0 4px 0 #6b4a22,0 6px 14px rgba(0,0,0,.45)}
   .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #6b4a22}
   .btn.secondary{background:linear-gradient(180deg,#4a6d8c,#2f4a66);color:#e8f0f8;box-shadow:0 4px 0 #1e3348}
@@ -27,18 +27,16 @@
   .shop-item.owned{border-color:#4caf50}
   .shop-item.selected{background:rgba(201,166,107,.22);border-color:#c9a66b}
   .char-info{display:flex;align-items:center;gap:10px}
-  .char-icon{width:46px;height:46px;border-radius:50%;background:#1e3348;display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid rgba(201,166,107,.5);overflow:hidden}
+  .char-icon{width:48px;height:48px;border-radius:50%;background:#1e3348;display:flex;align-items:center;justify-content:center;font-size:22px;border:2px solid rgba(201,166,107,.5)}
   .char-name{font-size:15px;font-weight:bold}
   .char-price{font-size:12px;opacity:.85}
-  .buy-btn{background:#c9a66b;color:#2c1810;border:none;padding:7px 12px;border-radius:8px;font-weight:bold;font-size:13px}
-  .buy-btn:disabled{background:#555;color:#aaa}
   .era-label{font-size:11px;opacity:.6;margin-top:2px}
+  .buy-btn{background:#c9a66b;color:#2c1810;border:none;padding:7px 12px;border-radius:8px;font-weight:bold;font-size:13px}
 </style>
 </head>
 <body>
 <div id="game-container">
   <canvas id="game"></canvas>
-
   <div id="hud">
     <div>
       <div class="hud-item" id="score-display">Επίπεδο 1</div>
@@ -108,56 +106,49 @@ function resize(){
 window.addEventListener('resize', resize);
 resize();
 
-// ===== AUDIO (Web Audio API) =====
+// Audio
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let actx = null;
 function initAudio(){ if(!actx) actx = new AudioCtx(); }
 function beep(freq, dur, type='square', vol=0.08){
   if(!actx) return;
-  const o = actx.createOscillator();
-  const g = actx.createGain();
+  const o = actx.createOscillator(), g = actx.createGain();
   o.type = type; o.frequency.value = freq;
   g.gain.setValueAtTime(vol, actx.currentTime);
   g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
   o.connect(g); g.connect(actx.destination);
   o.start(); o.stop(actx.currentTime + dur);
 }
-function sfxFlap(){ beep(420, 0.08, 'square', 0.07); beep(580, 0.06, 'square', 0.05); }
-function sfxCoin(){ beep(880, 0.07, 'sine', 0.09); beep(1200, 0.1, 'sine', 0.06); }
-function sfxScore(){ beep(660, 0.09, 'triangle', 0.07); }
-function sfxHit(){ beep(120, 0.25, 'sawtooth', 0.12); beep(80, 0.3, 'sawtooth', 0.1); }
-function sfxButton(){ beep(320, 0.05, 'square', 0.05); }
+function sfxFlap(){ beep(420,0.08,'square',0.07); beep(580,0.06,'square',0.05); }
+function sfxCoin(){ beep(880,0.07,'sine',0.09); beep(1200,0.1,'sine',0.06); }
+function sfxScore(){ beep(660,0.09,'triangle',0.07); }
+function sfxHit(){ beep(120,0.25,'sawtooth',0.12); }
+function sfxButton(){ beep(320,0.05,'square',0.05); }
 function sfxUnlock(){ beep(520,0.1,'sine',0.08); beep(780,0.15,'sine',0.07); }
 
-// ===== CHARACTERS (όλη η ελληνική ιστορία) =====
+// Χαρακτήρες - όλοι ξεχωριστοί
 const CHARACTERS = [
-  // Αρχαιότητα
-  {id:'daedalus', name:'Δαίδαλος', era:'Αρχαιότητα', price:0, skin:'#e8c4a0', wing:'#e8d5a3', icon:'🪶'},
-  {id:'icarus', name:'Ίκαρος', era:'Αρχαιότητα', price:40, skin:'#f0d0a0', wing:'#f5e0b8', icon:'☀️'},
-  {id:'hermes', name:'Ερμής', era:'Αρχαιότητα', price:90, skin:'#d4b896', wing:'#c9a66b', icon:'👟'},
-  {id:'athena', name:'Αθηνά', era:'Αρχαιότητα', price:140, skin:'#e8dcc8', wing:'#d4c4a8', icon:'🦉'},
-  {id:'apollo', name:'Απόλλων', era:'Αρχαιότητα', price:200, skin:'#f5e6c8', wing:'#ffd700', icon:'lyre'},
-  {id:'achilles', name:'Αχιλλέας', era:'Αρχαιότητα', price:260, skin:'#e0c8a8', wing:'#b8860b', icon:'⚔️'},
-  {id:'odysseus', name:'Οδυσσέας', era:'Αρχαιότητα', price:320, skin:'#d4b896', wing:'#8b7355', icon:'🚢'},
-  {id:'alexander', name:'Μ. Αλέξανδρος', era:'Αρχαιότητα', price:400, skin:'#e8d0b0', wing:'#c9a66b', icon:'🦁'},
-  // Βυζάντιο
-  {id:'constantine', name:'Κωνσταντίνος', era:'Βυζάντιο', price:500, skin:'#e8e0d0', wing:'#d4af37', icon:'✝️'},
-  {id:'theodora', name:'Θεοδώρα', era:'Βυζάντιο', price:580, skin:'#f0e0d0', wing:'#9b59b6', icon:'👑'},
-  {id:'basil', name:'Βασίλειος Β΄', era:'Βυζάντιο', price:650, skin:'#d8c8b0', wing:'#8b0000', icon:'🛡️'},
-  // Νεότερη Ελλάδα
-  {id:'kolokotronis', name:'Κολοκοτρώνης', era:'Νεότερη', price:750, skin:'#d4b896', wing:'#2e5a3c', icon:'🧢'},
-  {id:'bouboulina', name:'Μπουμπουλίνα', era:'Νεότερη', price:820, skin:'#e8d0b8', wing:'#1a3a5c', icon:'⚓'},
-  {id:'kapodistrias', name:'Καποδίστριας', era:'Νεότερη', price:900, skin:'#e0d4c0', wing:'#4a6fa5', icon:'📜'},
-  {id:'modern', name:'Σύγχρονος Έλληνας', era:'Σύγχρονη', price:1000, skin:'#f0e6d8', wing:'#0d5c2e', icon:'🇬🇷'}
+  {id:'daedalus', name:'Δαίδαλος', era:'Αρχαιότητα', price:0, icon:'🪶'},
+  {id:'icarus', name:'Ίκαρος', era:'Αρχαιότητα', price:50, icon:'☀️'},
+  {id:'hermes', name:'Ερμής', era:'Αρχαιότητα', price:100, icon:'👟'},
+  {id:'athena', name:'Αθηνά', era:'Αρχαιότητα', price:160, icon:'🦉'},
+  {id:'apollo', name:'Απόλλων', era:'Αρχαιότητα', price:220, icon:'🎵'},
+  {id:'achilles', name:'Αχιλλέας', era:'Αρχαιότητα', price:280, icon:'⚔️'},
+  {id:'odysseus', name:'Οδυσσέας', era:'Αρχαιότητα', price:350, icon:'🚢'},
+  {id:'alexander', name:'Μ. Αλέξανδρος', era:'Αρχαιότητα', price:420, icon:'🦁'},
+  {id:'constantine', name:'Κωνσταντίνος', era:'Βυζάντιο', price:520, icon:'✝️'},
+  {id:'theodora', name:'Θεοδώρα', era:'Βυζάντιο', price:600, icon:'👑'},
+  {id:'basil', name:'Βασίλειος Β΄', era:'Βυζάντιο', price:680, icon:'🛡️'},
+  {id:'kolokotronis', name:'Κολοκοτρώνης', era:'Νεότερη', price:780, icon:'🧢'},
+  {id:'bouboulina', name:'Μπουμπουλίνα', era:'Νεότερη', price:860, icon:'⚓'},
+  {id:'kapodistrias', name:'Καποδίστριας', era:'Νεότερη', price:950, icon:'📜'},
+  {id:'modern', name:'Σύγχρονος Έλληνας', era:'Σύγχρονη', price:1200, icon:'🇬🇷'} // Υπέρτατος
 ];
 
 let state = 'menu';
 let bird = {x:85, y:0, vy:0, r:19};
-let pipes = [];
-let coins = [];
-let score = 0;
-let sessionCoins = 0;
-let frame = 0;
+let pipes = [], coins = [];
+let score = 0, sessionCoins = 0, frame = 0;
 
 let bestScore = +localStorage.getItem('daedalus_best') || 0;
 let totalCoins = +localStorage.getItem('daedalus_coins') || 0;
@@ -175,283 +166,272 @@ function updateUI(){
   totalCoinsEl.textContent = totalCoins;
   shopCoinsEl.textContent = totalCoins;
 }
+function getChar(){ return CHARACTERS.find(c => c.id === selectedChar) || CHARACTERS[0]; }
 
-function getChar(){ return CHARACTERS.find(c=>c.id===selectedChar) || CHARACTERS[0]; }
-
-// Difficulty based on score
 function getDifficulty(){
-  const lvl = score;
   return {
-    speed: 3.0 + Math.min(lvl * 0.035, 4.5),
-    gap: Math.max(175 - lvl * 0.7, 125),
-    spawn: Math.max(95 - Math.floor(lvl/4), 55)
+    speed: 3.0 + Math.min(score * 0.038, 4.8),
+    gap: Math.max(175 - score * 0.75, 120),
+    spawn: Math.max(92 - Math.floor(score/3.5), 52)
   };
 }
 
-// ===== DRAW CHARACTER (βελτιωμένο) =====
+// ===== Ξεχωριστό σχέδιο για κάθε χαρακτήρα =====
 function drawCharacter(x, y, angle){
-  const ch = getChar();
+  const id = selectedChar;
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
 
-  // Φτερά
-  ctx.fillStyle = ch.wing;
-  ctx.beginPath();
-  ctx.ellipse(-17, -3, 21, 12, -0.45, 0, Math.PI*2);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.ellipse(9, -7, 19, 11, 0.55, 0, Math.PI*2);
-  ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,0.18)';
-  ctx.lineWidth = 1.3;
-  ctx.beginPath(); ctx.moveTo(-28,-5); ctx.lineTo(-7,1); ctx.stroke();
+  // Κοινά φτερά (αλλάζουν χρώμα)
+  let wingColor = '#e8d5a3';
+  if(id==='icarus') wingColor = '#ffd700';
+  if(id==='hermes') wingColor = '#c9a66b';
+  if(id==='athena') wingColor = '#d4c4a8';
+  if(id==='apollo') wingColor = '#ffe566';
+  if(id==='achilles') wingColor = '#b8860b';
+  if(id==='alexander') wingColor = '#daa520';
+  if(id==='constantine' || id==='theodora') wingColor = '#d4af37';
+  if(id==='basil') wingColor = '#8b0000';
+  if(id==='kolokotronis') wingColor = '#2e5a3c';
+  if(id==='bouboulina') wingColor = '#1a3a5c';
+  if(id==='modern') wingColor = '#0d5c2e';
+
+  ctx.fillStyle = wingColor;
+  ctx.beginPath(); ctx.ellipse(-17,-3,21,12,-0.45,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(9,-7,19,11,0.55,0,Math.PI*2); ctx.fill();
 
   // Σώμα
   ctx.fillStyle = '#5c3a21';
-  ctx.beginPath();
-  ctx.ellipse(0, 8, 10, 14, 0, 0, Math.PI*2);
-  ctx.fill();
+  if(id==='athena' || id==='theodora' || id==='bouboulina') ctx.fillStyle = '#6b4c3a';
+  ctx.beginPath(); ctx.ellipse(0,8,10,14,0,0,Math.PI*2); ctx.fill();
 
   // Κεφάλι
-  ctx.fillStyle = ch.skin;
-  ctx.beginPath();
-  ctx.arc(0, -11, 10.5, 0, Math.PI*2);
-  ctx.fill();
+  ctx.fillStyle = '#e8c4a0';
+  if(id==='apollo') ctx.fillStyle = '#f5e6c8';
+  if(id==='modern') ctx.fillStyle = '#f0d8b8';
+  ctx.beginPath(); ctx.arc(0,-11,10.5,0,Math.PI*2); ctx.fill();
 
-  // Μαλλιά
+  // Μαλλιά / διαφορές
   ctx.fillStyle = '#3d2914';
-  ctx.beginPath();
-  ctx.arc(-1, -14, 8.5, Math.PI*1.1, Math.PI*1.9);
-  ctx.fill();
+  if(id==='alexander') ctx.fillStyle = '#5c4033';
+  if(id==='modern') ctx.fillStyle = '#2c1810';
+  ctx.beginPath(); ctx.arc(-1,-14,8.5,Math.PI*1.1,Math.PI*1.9); ctx.fill();
 
   // Μάτι
   ctx.fillStyle = '#fff';
-  ctx.beginPath(); ctx.arc(4, -12, 3.2, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(4,-12,3.2,0,Math.PI*2); ctx.fill();
   ctx.fillStyle = '#222';
-  ctx.beginPath(); ctx.arc(5, -12, 1.6, 0, Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(5,-12,1.6,0,Math.PI*2); ctx.fill();
 
-  // Ειδικά αξεσουάρ ανά χαρακτήρα
-  if(ch.id === 'alexander'){
+  // ===== Ειδικά χαρακτηριστικά =====
+  if(id === 'daedalus'){
+    // μικρό εργαλείο
+    ctx.strokeStyle = '#888'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(12,5); ctx.lineTo(18,12); ctx.stroke();
+  }
+  if(id === 'icarus'){
+    // λαμπερά φτερά ήδη χρυσά
+    ctx.fillStyle = 'rgba(255,215,0,0.4)';
+    ctx.beginPath(); ctx.arc(0,-11,14,0,Math.PI*2); ctx.fill();
+  }
+  if(id === 'hermes'){
+    // φτερωτά σανδάλια
     ctx.fillStyle = '#c9a66b';
-    ctx.fillRect(-7, -22, 14, 5);
+    ctx.fillRect(-8,18,7,4); ctx.fillRect(2,18,7,4);
   }
-  if(ch.id === 'constantine' || ch.id === 'theodora'){
+  if(id === 'athena'){
+    // περικεφαλαία
+    ctx.fillStyle = '#c0c0c0';
+    ctx.beginPath(); ctx.arc(0,-18,8,Math.PI,0); ctx.fill();
+    ctx.fillRect(-6,-18,12,4);
+  }
+  if(id === 'apollo'){
+    // λύρα υπόδειξη
+    ctx.strokeStyle = '#ffd700'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(14,4,5,0,Math.PI*2); ctx.stroke();
+  }
+  if(id === 'achilles'){
+    // ασπίδα / δόρυ
+    ctx.fillStyle = '#b8860b';
+    ctx.fillRect(12,0,4,16);
+  }
+  if(id === 'odysseus'){
+    // καπέλο ταξιδιού
+    ctx.fillStyle = '#5c4033';
+    ctx.beginPath(); ctx.ellipse(0,-20,9,4,0,0,Math.PI*2); ctx.fill();
+  }
+  if(id === 'alexander'){
+    // περικεφαλαία λιονταριού
+    ctx.fillStyle = '#daa520';
+    ctx.beginPath(); ctx.arc(0,-19,7,0,Math.PI*2); ctx.fill();
+  }
+  if(id === 'constantine'){
+    // σταυρός
     ctx.fillStyle = '#d4af37';
-    ctx.beginPath(); ctx.arc(0, -20, 5, 0, Math.PI*2); ctx.fill();
+    ctx.fillRect(-2,-24,4,8); ctx.fillRect(-5,-21,10,3);
   }
-  if(ch.id === 'kolokotronis'){
+  if(id === 'theodora'){
+    // στέμμα
+    ctx.fillStyle = '#d4af37';
+    ctx.fillRect(-8,-22,16,5);
+    ctx.beginPath(); ctx.arc(-5,-24,2,0,Math.PI*2); ctx.arc(0,-25,2,0,Math.PI*2); ctx.arc(5,-24,2,0,Math.PI*2); ctx.fill();
+  }
+  if(id === 'basil'){
+    // στρατιωτικό κράνος
+    ctx.fillStyle = '#8b0000';
+    ctx.fillRect(-8,-20,16,6);
+  }
+  if(id === 'kolokotronis'){
+    // φουστανέλα υπόδειξη + καπέλο
     ctx.fillStyle = '#2e5a3c';
-    ctx.fillRect(-9, -21, 18, 7);
+    ctx.fillRect(-9,-21,18,6);
+    ctx.fillStyle = '#f5e6c8';
+    ctx.fillRect(-7,16,14,5);
   }
-  if(ch.id === 'modern'){
+  if(id === 'bouboulina'){
+    // ναυτικό καπέλο
+    ctx.fillStyle = '#1a3a5c';
+    ctx.fillRect(-9,-21,18,5);
+    ctx.fillRect(-6,-24,12,3);
+  }
+  if(id === 'kapodistrias'){
+    // επίσημο καπέλο
+    ctx.fillStyle = '#2c1810';
+    ctx.fillRect(-8,-21,16,5);
+  }
+  if(id === 'modern'){
+    // Συμβολικός Σύγχρονος Έλληνας - ελληνική σημαία χρώματα
     ctx.fillStyle = '#0d5c2e';
-    ctx.fillRect(-6, 14, 12, 4);
+    ctx.fillRect(-7,15,14,5); // ρούχο
+    // μικρή σημαία
+    ctx.fillStyle = '#0d5c2e';
+    ctx.fillRect(12,-6,10,7);
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(12,-3,10,2);
+    ctx.fillStyle = '#0d5c2e';
+    ctx.fillRect(12,-6,3,7);
   }
 
   ctx.restore();
 }
 
-// ===== BACKGROUNDS ανά εποχή =====
+// Φόντα ανά εποχή
 function drawBackground(){
   const lvl = score;
-  let sky1, sky2, sky3, accent;
-
-  if(lvl < 15){ // Αρχαία
-    sky1='#3a6ea5'; sky2='#6fa8d4'; sky3='#b8d4e8'; accent='rgba(255,255,255,0.13)';
-  } else if(lvl < 30){ // Κλασική
-    sky1='#2e5a8a'; sky2='#5b9bc7'; sky3='#a8cce0'; accent='rgba(255,240,200,0.12)';
-  } else if(lvl < 50){ // Ελληνιστική / Ρωμαϊκή
-    sky1='#3d4a6a'; sky2='#6a7f9e'; sky3='#b0b8c8'; accent='rgba(200,180,140,0.12)';
-  } else if(lvl < 70){ // Βυζάντιο
-    sky1='#2a3a5c'; sky2='#4a5f8a'; sky3='#8a9bb8'; accent='rgba(212,175,55,0.15)';
-  } else if(lvl < 90){ // Νεότερη
-    sky1='#1e3a5f'; sky2='#3d6a9a'; sky3='#7aa0c4'; accent='rgba(13,92,46,0.14)';
-  } else { // Σύγχρονη
-    sky1='#0f2a4a'; sky2='#2a5a8a'; sky3='#5a8ab8'; accent='rgba(13,92,46,0.18)';
-  }
+  let s1,s2,s3, acc;
+  if(lvl < 12){ s1='#3a6ea5'; s2='#6fa8d4'; s3='#b8d4e8'; acc='rgba(255,255,255,0.14)'; }
+  else if(lvl < 25){ s1='#2e5a8a'; s2='#5b9bc7'; s3='#a8cce0'; acc='rgba(255,240,200,0.13)'; }
+  else if(lvl < 40){ s1='#3d4a6a'; s2='#6a7f9e'; s3='#b0b8c8'; acc='rgba(200,180,140,0.12)'; }
+  else if(lvl < 55){ s1='#2a3a5c'; s2='#4a5f8a'; s3='#8a9bb8'; acc='rgba(212,175,55,0.16)'; }
+  else if(lvl < 75){ s1='#1e3a5f'; s2='#3d6a9a'; s3='#7aa0c4'; acc='rgba(13,92,46,0.15)'; }
+  else { s1='#0f2a4a'; s2='#2a5a8a'; s3='#5a8ab8'; acc='rgba(13,92,46,0.2)'; }
 
   const g = ctx.createLinearGradient(0,0,0,H);
-  g.addColorStop(0, sky1);
-  g.addColorStop(0.55, sky2);
-  g.addColorStop(1, sky3);
-  ctx.fillStyle = g;
-  ctx.fillRect(0,0,W,H);
+  g.addColorStop(0,s1); g.addColorStop(0.55,s2); g.addColorStop(1,s3);
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
 
-  // Διακοσμητικά ανά εποχή
-  ctx.fillStyle = accent;
-  if(lvl < 50){
-    // Ναός
-    ctx.fillRect(W*0.58, H*0.25, 80, 48);
-    for(let i=0;i<5;i++) ctx.fillRect(W*0.58+5+i*14, H*0.19, 7, 58);
+  ctx.fillStyle = acc;
+  if(lvl < 40){
+    ctx.fillRect(W*0.58, H*0.24, 78, 48);
+    for(let i=0;i<5;i++) ctx.fillRect(W*0.58+5+i*14, H*0.18, 7, 58);
     ctx.beginPath();
-    ctx.moveTo(W*0.56, H*0.25);
-    ctx.lineTo(W*0.58+40, H*0.15);
-    ctx.lineTo(W*0.58+90, H*0.25);
-    ctx.fill();
-  } else if(lvl < 70){
-    // Τρούλος Βυζαντινός
-    ctx.beginPath();
-    ctx.arc(W*0.7, H*0.28, 28, Math.PI, 0);
-    ctx.fill();
-    ctx.fillRect(W*0.7-32, H*0.28, 64, 40);
+    ctx.moveTo(W*0.56,H*0.24); ctx.lineTo(W*0.58+39,H*0.14); ctx.lineTo(W*0.58+88,H*0.24); ctx.fill();
+  } else if(lvl < 55){
+    ctx.beginPath(); ctx.arc(W*0.7,H*0.27,26,Math.PI,0); ctx.fill();
+    ctx.fillRect(W*0.7-30,H*0.27,60,38);
+  } else if(lvl < 75){
+    ctx.fillRect(W*0.55,H*0.3,25,50); ctx.fillRect(W*0.68,H*0.26,20,55); ctx.fillRect(W*0.78,H*0.33,30,45);
   } else {
-    // Μοντέρνα γραμμή ορίζοντα
-    ctx.fillRect(W*0.5, H*0.32, 30, 55);
-    ctx.fillRect(W*0.62, H*0.28, 22, 60);
-    ctx.fillRect(W*0.75, H*0.35, 35, 50);
+    // Σύγχρονη πόλη
+    ctx.fillRect(W*0.5,H*0.28,22,55); ctx.fillRect(W*0.6,H*0.22,18,62);
+    ctx.fillRect(W*0.72,H*0.3,28,50); ctx.fillRect(W*0.85,H*0.25,20,58);
   }
 }
 
 function drawGround(){
-  const lvl = score;
-  let col1 = '#c9b896', col2 = '#b8a78a';
-  if(lvl >= 70){ col1='#6b8e6b'; col2='#4a6b4a'; }
-  if(lvl >= 90){ col1='#4a6b8a'; col2='#2f4a66'; }
-
-  ctx.fillStyle = col1;
-  ctx.fillRect(0, H-38, W, 38);
-  ctx.fillStyle = col2;
-  for(let i=0;i<W;i+=34) ctx.fillRect(i, H-38, 17, 6);
+  let c1='#c9b896', c2='#b8a78a';
+  if(score>=55){ c1='#6b8e6b'; c2='#4a6b4a'; }
+  if(score>=75){ c1='#4a6b8a'; c2='#2f4a66'; }
+  ctx.fillStyle=c1; ctx.fillRect(0,H-38,W,38);
+  ctx.fillStyle=c2; for(let i=0;i<W;i+=34) ctx.fillRect(i,H-38,17,6);
 }
 
 function drawColumn(x, topH, bottomY){
-  const w = 66;
-  const marble = score < 50 ? '#f0e6d2' : (score < 70 ? '#e0d8c8' : '#d0d8e0');
-  const dark = score < 50 ? '#d4c4a0' : '#b0b8c0';
-
-  ctx.fillStyle = marble;
-  ctx.fillRect(x+7, 0, w-14, topH-24);
-  ctx.fillStyle = dark;
-  ctx.fillRect(x, topH-24, w, 10);
-  ctx.fillRect(x+3, topH-14, w-6, 14);
-
-  ctx.fillStyle = marble;
-  ctx.fillRect(x+7, bottomY+24, w-14, H-bottomY-38-24);
-  ctx.fillStyle = dark;
-  ctx.fillRect(x, bottomY, w, 10);
-  ctx.fillRect(x+3, bottomY+10, w-6, 14);
-  ctx.fillRect(x+2, H-48, w-4, 10);
-
-  ctx.strokeStyle = 'rgba(0,0,0,0.12)';
-  ctx.lineWidth = 1.4;
+  const w=66;
+  const marble = score<40 ? '#f0e6d2' : (score<55 ? '#e0d8c8' : '#d0d8e0');
+  const dark = score<40 ? '#d4c4a0' : '#b0b8c0';
+  ctx.fillStyle=marble; ctx.fillRect(x+7,0,w-14,topH-24);
+  ctx.fillStyle=dark; ctx.fillRect(x,topH-24,w,10); ctx.fillRect(x+3,topH-14,w-6,14);
+  ctx.fillStyle=marble; ctx.fillRect(x+7,bottomY+24,w-14,H-bottomY-38-24);
+  ctx.fillStyle=dark; ctx.fillRect(x,bottomY,w,10); ctx.fillRect(x+3,bottomY+10,w-6,14); ctx.fillRect(x+2,H-48,w-4,10);
+  ctx.strokeStyle='rgba(0,0,0,0.12)'; ctx.lineWidth=1.4;
   for(let i=1;i<4;i++){
-    const lx = x+7+(w-14)*(i/4);
+    const lx=x+7+(w-14)*(i/4);
     ctx.beginPath(); ctx.moveTo(lx,0); ctx.lineTo(lx,topH-24); ctx.stroke();
     ctx.beginPath(); ctx.moveTo(lx,bottomY+24); ctx.lineTo(lx,H-48); ctx.stroke();
   }
 }
 
 function drawCoin(c){
-  ctx.save();
-  ctx.translate(c.x, c.y);
-  ctx.fillStyle = '#ffd700';
-  ctx.beginPath(); ctx.arc(0,0,c.r,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#e6b800';
-  ctx.beginPath(); ctx.arc(0,0,c.r-3,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle = '#fff8dc';
-  ctx.font = 'bold 10px Georgia';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('€',0,1);
-  ctx.restore();
+  ctx.save(); ctx.translate(c.x,c.y);
+  ctx.fillStyle='#ffd700'; ctx.beginPath(); ctx.arc(0,0,c.r,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#e6b800'; ctx.beginPath(); ctx.arc(0,0,c.r-3,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#fff8dc'; ctx.font='bold 10px Georgia'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('€',0,1); ctx.restore();
 }
 
-// ===== LOGIC =====
 function resetGame(){
-  bird.y = H/2; bird.vy = 0;
-  pipes = []; coins = [];
-  score = 0; sessionCoins = 0; frame = 0;
-  scoreDisplay.textContent = 'Επίπεδο 1';
-  coinsDisplay.textContent = '🪙 0';
+  bird.y=H/2; bird.vy=0; pipes=[]; coins=[]; score=0; sessionCoins=0; frame=0;
+  scoreDisplay.textContent='Επίπεδο 1'; coinsDisplay.textContent='🪙 0';
 }
-
 function startGame(){
-  initAudio();
-  sfxButton();
-  resetGame();
-  state = 'playing';
-  showScreen(null);
-  hud.classList.add('active');
-  bird.vy = -8.2;
+  initAudio(); sfxButton(); resetGame();
+  state='playing'; showScreen(null); hud.classList.add('active'); bird.vy=-8.2;
 }
-
 function die(){
-  sfxHit();
-  state = 'gameover';
-  hud.classList.remove('active');
-  if(score > bestScore) bestScore = score;
-  totalCoins += sessionCoins;
-  save(); updateUI();
-  finalScoreEl.textContent = score;
-  earnedCoinsEl.textContent = sessionCoins;
+  sfxHit(); state='gameover'; hud.classList.remove('active');
+  if(score>bestScore) bestScore=score;
+  totalCoins+=sessionCoins; save(); updateUI();
+  finalScoreEl.textContent=score; earnedCoinsEl.textContent=sessionCoins;
   showScreen('gameover');
 }
-
 function createPipe(){
-  const d = getDifficulty();
-  const minY = 90;
-  const maxY = H - d.gap - 130;
-  const topH = Math.random()*(maxY-minY)+minY;
+  const d=getDifficulty();
+  const minY=90, maxY=H-d.gap-130;
+  const topH=Math.random()*(maxY-minY)+minY;
   pipes.push({x:W+40, top:topH, bottom:topH+d.gap, passed:false});
-  if(Math.random() < 0.7){
-    coins.push({x:W+40+33, y:topH + d.gap/2, r:11, collected:false});
-  }
+  if(Math.random()<0.7) coins.push({x:W+40+33, y:topH+d.gap/2, r:11, collected:false});
 }
-
 function update(){
-  if(state !== 'playing') return;
-  const d = getDifficulty();
-
-  bird.vy += 0.43;
-  bird.y += bird.vy;
-
-  if(bird.y + bird.r > H-38 || bird.y - bird.r < 0){ die(); return; }
-
-  if(frame % d.spawn === 0) createPipe();
-
+  if(state!=='playing') return;
+  const d=getDifficulty();
+  bird.vy+=0.43; bird.y+=bird.vy;
+  if(bird.y+bird.r>H-38 || bird.y-bird.r<0){ die(); return; }
+  if(frame%d.spawn===0) createPipe();
   for(let i=pipes.length-1;i>=0;i--){
-    const p = pipes[i];
-    p.x -= d.speed;
-    if(bird.x+bird.r-4 > p.x && bird.x-bird.r+4 < p.x+66 &&
-       (bird.y-bird.r < p.top || bird.y+bird.r > p.bottom)){
-      die(); return;
-    }
-    if(!p.passed && p.x+66 < bird.x){
-      p.passed = true;
-      score++;
-      sfxScore();
-      scoreDisplay.textContent = 'Επίπεδο ' + score;
-    }
-    if(p.x+66 < -30) pipes.splice(i,1);
+    const p=pipes[i]; p.x-=d.speed;
+    if(bird.x+bird.r-4>p.x && bird.x-bird.r+4<p.x+66 && (bird.y-bird.r<p.top || bird.y+bird.r>p.bottom)){ die(); return; }
+    if(!p.passed && p.x+66<bird.x){ p.passed=true; score++; sfxScore(); scoreDisplay.textContent='Επίπεδο '+score; }
+    if(p.x+66<-30) pipes.splice(i,1);
   }
-
   for(let i=coins.length-1;i>=0;i--){
-    const c = coins[i];
-    c.x -= d.speed;
-    const dx = bird.x-c.x, dy = bird.y-c.y;
-    if(!c.collected && Math.sqrt(dx*dx+dy*dy) < bird.r+c.r){
-      c.collected = true;
-      sessionCoins++;
-      sfxCoin();
-      coinsDisplay.textContent = '🪙 ' + sessionCoins;
-    }
-    if(c.x < -20 || c.collected) coins.splice(i,1);
+    const c=coins[i]; c.x-=d.speed;
+    const dx=bird.x-c.x, dy=bird.y-c.y;
+    if(!c.collected && Math.sqrt(dx*dx+dy*dy)<bird.r+c.r){ c.collected=true; sessionCoins++; sfxCoin(); coinsDisplay.textContent='🪙 '+sessionCoins; }
+    if(c.x<-20 || c.collected) coins.splice(i,1);
   }
   frame++;
 }
-
 function draw(){
-  drawBackground();
-  drawGround();
-  pipes.forEach(p => drawColumn(p.x, p.top, p.bottom));
-  coins.forEach(c => { if(!c.collected) drawCoin(c); });
-  if(state==='playing' || state==='paused'){
-    const ang = Math.min(Math.max(bird.vy*0.07, -0.55), 0.75);
-    drawCharacter(bird.x, bird.y, ang);
+  drawBackground(); drawGround();
+  pipes.forEach(p=>drawColumn(p.x,p.top,p.bottom));
+  coins.forEach(c=>{ if(!c.collected) drawCoin(c); });
+  if(state==='playing'||state==='paused'){
+    const ang=Math.min(Math.max(bird.vy*0.07,-0.55),0.75);
+    drawCharacter(bird.x,bird.y,ang);
   }
 }
-
 function showScreen(name){
   [menuScreen,pauseScreen,gameoverScreen,shopScreen].forEach(s=>s.classList.remove('active'));
   if(name==='menu') menuScreen.classList.add('active');
@@ -459,67 +439,40 @@ function showScreen(name){
   if(name==='gameover') gameoverScreen.classList.add('active');
   if(name==='shop') shopScreen.classList.add('active');
 }
-
-function openShop(){
-  sfxButton();
-  state='shop';
-  renderShop();
-  showScreen('shop');
-  hud.classList.remove('active');
-}
-
+function openShop(){ sfxButton(); state='shop'; renderShop(); showScreen('shop'); hud.classList.remove('active'); }
 function renderShop(){
-  shopList.innerHTML = '';
+  shopList.innerHTML='';
   CHARACTERS.forEach(ch=>{
-    const owned = unlocked.includes(ch.id);
-    const selected = selectedChar === ch.id;
-    const div = document.createElement('div');
-    div.className = 'shop-item' + (owned?' owned':'') + (selected?' selected':'');
-    div.innerHTML = `
-      <div class="char-info">
-        <div class="char-icon">${ch.icon}</div>
-        <div>
-          <div class="char-name">${ch.name}</div>
-          <div class="char-price">${owned ? (selected?'Επιλεγμένος':'Ξεκλείδωτος') : ch.price+' 🪙'}</div>
-          <div class="era-label">${ch.era}</div>
-        </div>
-      </div>
-      <button class="buy-btn" data-id="${ch.id}">${owned ? (selected?'✓':'Επιλογή') : 'Αγορά'}</button>`;
+    const owned=unlocked.includes(ch.id), selected=selectedChar===ch.id;
+    const div=document.createElement('div');
+    div.className='shop-item'+(owned?' owned':'')+(selected?' selected':'');
+    div.innerHTML=`<div class="char-info"><div class="char-icon">${ch.icon}</div><div><div class="char-name">${ch.name}</div><div class="char-price">${owned?(selected?'Επιλεγμένος':'Ξεκλείδωτος'):ch.price+' 🪙'}</div><div class="era-label">${ch.era}</div></div></div><button class="buy-btn" data-id="${ch.id}">${owned?(selected?'✓':'Επιλογή'):'Αγορά'}</button>`;
     shopList.appendChild(div);
   });
   shopList.querySelectorAll('.buy-btn').forEach(btn=>{
-    btn.onclick = ()=>{
-      const id = btn.dataset.id;
-      const ch = CHARACTERS.find(c=>c.id===id);
-      if(unlocked.includes(id)){
-        selectedChar = id; save(); sfxButton(); renderShop();
-      } else if(totalCoins >= ch.price){
-        totalCoins -= ch.price;
-        unlocked.push(id);
-        selectedChar = id;
-        save(); updateUI(); sfxUnlock(); renderShop();
-      }
+    btn.onclick=()=>{
+      const id=btn.dataset.id, ch=CHARACTERS.find(c=>c.id===id);
+      if(unlocked.includes(id)){ selectedChar=id; save(); sfxButton(); renderShop(); }
+      else if(totalCoins>=ch.price){ totalCoins-=ch.price; unlocked.push(id); selectedChar=id; save(); updateUI(); sfxUnlock(); renderShop(); }
     };
   });
 }
 
-// Controls
-function flap(){ if(state==='playing'){ bird.vy = -8.2; sfxFlap(); } }
-canvas.addEventListener('touchstart', e=>{ e.preventDefault(); if(state==='playing') flap(); }, {passive:false});
-canvas.addEventListener('mousedown', ()=>{ if(state==='playing') flap(); });
+function flap(){ if(state==='playing'){ bird.vy=-8.2; sfxFlap(); } }
+canvas.addEventListener('touchstart',e=>{ e.preventDefault(); if(state==='playing') flap(); },{passive:false});
+canvas.addEventListener('mousedown',()=>{ if(state==='playing') flap(); });
 
-document.getElementById('btn-play').onclick = startGame;
-document.getElementById('btn-shop').onclick = openShop;
-document.getElementById('btn-resume').onclick = ()=>{ sfxButton(); state='playing'; showScreen(null); hud.classList.add('active'); };
-document.getElementById('btn-menu-from-pause').onclick = ()=>{ sfxButton(); state='menu'; showScreen('menu'); hud.classList.remove('active'); updateUI(); };
-document.getElementById('btn-retry').onclick = startGame;
-document.getElementById('btn-menu-from-go').onclick = ()=>{ sfxButton(); state='menu'; showScreen('menu'); updateUI(); };
-document.getElementById('btn-back-shop').onclick = ()=>{ sfxButton(); state='menu'; showScreen('menu'); updateUI(); };
-document.getElementById('pause-btn').onclick = ()=>{ if(state==='playing'){ state='paused'; showScreen('pause'); } };
+document.getElementById('btn-play').onclick=startGame;
+document.getElementById('btn-shop').onclick=openShop;
+document.getElementById('btn-resume').onclick=()=>{ sfxButton(); state='playing'; showScreen(null); hud.classList.add('active'); };
+document.getElementById('btn-menu-from-pause').onclick=()=>{ sfxButton(); state='menu'; showScreen('menu'); hud.classList.remove('active'); updateUI(); };
+document.getElementById('btn-retry').onclick=startGame;
+document.getElementById('btn-menu-from-go').onclick=()=>{ sfxButton(); state='menu'; showScreen('menu'); updateUI(); };
+document.getElementById('btn-back-shop').onclick=()=>{ sfxButton(); state='menu'; showScreen('menu'); updateUI(); };
+document.getElementById('pause-btn').onclick=()=>{ if(state==='playing'){ state='paused'; showScreen('pause'); } };
 
 function loop(){ update(); draw(); requestAnimationFrame(loop); }
-updateUI();
-loop();
+updateUI(); loop();
 </script>
 </body>
 </html>
