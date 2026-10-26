@@ -3103,7 +3103,14 @@ function finish(u){ZU=window.ZUSER=u;try{sessionStorage.removeItem("zguest")}cat
  $("zsetup").hidden=true;enter();render();toast("👋 Καλώς ήρθες, "+(u.name||"").split(" ")[0]);if(window.ZFB)ZFB.watch(function(l){window.ZONPOSTS&&ZONPOSTS(l)})}
 function guestMode(){window.ZGUEST=true;enter();if(!$("zgbar")){var d=document.createElement("div");d.id="zgbar";d.innerHTML='👀 Βλέπεις ως επισκέπτης <button>Σύνδεση</button>';d.querySelector("button").onclick=function(){try{sessionStorage.removeItem("zguest")}catch(x){}location.reload()};document.body.appendChild(d)}
  try{if(window.ZFB)ZFB.watch(function(l){window.ZONPOSTS&&ZONPOSTS(l)})}catch(x){}render()}
-function showSetup(u){var s=$("zsetup");s.hidden=false;$("zsn").value=(u.name||"").slice(0,40);$("zsu").value=(u.name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9_]/g,"").slice(0,20);
+function slug(t){var M={α:"a",ά:"a",β:"v",γ:"g",δ:"d",ε:"e",έ:"e",ζ:"z",η:"i",ή:"i",θ:"th",ι:"i",ί:"i",ϊ:"i",ΐ:"i",κ:"k",λ:"l",μ:"m",ν:"n",ξ:"x",ο:"o",ό:"o",π:"p",ρ:"r",σ:"s",ς:"s",τ:"t",υ:"y",ύ:"y",ϋ:"y",ΰ:"y",φ:"f",χ:"ch",ψ:"ps",ω:"o",ώ:"o"};
+ return String(t||"").toLowerCase().split("").map(function(c){return M[c]!==undefined?M[c]:c}).join("").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9_]/g,"").slice(0,16)}
+function autoSetup(u){m.textContent="Δημιουργία λογαριασμού…";b.disabled=true;
+ var name=(u.name||(u.email||"").split("@")[0]||"Χρήστης").slice(0,40),base=slug(u.name)||slug((u.email||"").split("@")[0])||"dolphin";while(base.length<3)base+="x";var tries=0;
+ function attempt(){var h=tries?base+Math.floor(100+Math.random()*9900):base;h=h.slice(0,20);tries++;
+  ZAUTH.claim(name,h).then(function(info){rememberAcct(info);finish(info)}).catch(function(er){var c=er&&er.code||"";if(c=="permission-denied"&&tries<6)return attempt();showSetup(u)})}
+ attempt()}
+function showSetup(u){var s=$("zsetup");s.hidden=false;$("zsn").value=(u.name||"").slice(0,40);if(!$("zsw")){var sw=document.createElement("button");sw.id="zsw";sw.className="zgst";sw.textContent="Άλλος λογαριασμός Google";sw.onclick=function(){var d=function(){try{localStorage.removeItem("dolphin_uid")}catch(x){}location.reload()};window.ZAUTH?ZAUTH.signOut().then(d,d):d()};$("zsb").parentNode.appendChild(sw)}$("zsu").value=(u.name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9_]/g,"").slice(0,20);
  $("zsb").onclick=function(){var n=$("zsn").value.trim(),h=$("zsu").value.trim().toLowerCase(),m=$("zsm");
   if(n.length<1||n.length>40){m.textContent="Γράψε ένα όνομα (έως 40 χαρακτήρες).";return}
   if(!/^[a-z0-9_]{3,20}$/.test(h)){m.textContent="Το όνομα χρήστη πρέπει να έχει 3 έως 20 λατινικά γράμματα, αριθμούς ή κάτω παύλα.";return}
@@ -3114,7 +3121,7 @@ document.addEventListener("zauth",function(e){var d=e.detail||{};clearTimeout(t0
  var u=d.user;if(!u){try{localStorage.removeItem("dolphin_uid")}catch(x){}if(guest)return guestMode();return ready()}
  var st="";try{st=localStorage.getItem("dolphin_uid")||""}catch(x){}
  if(st!==u.uid){try{localStorage.setItem("dolphin_uid",u.uid)}catch(x){}if(st){location.reload();return}window.__ZUID=String(u.uid).replace(/[^\w-]/g,"");KEY="dolphin_v1_"+window.__ZUID}if(!d.needSetup)rememberAcct(u);
- if(d.needSetup)return showSetup(u);
+ if(d.needSetup)return autoSetup(u);
  finish(u)});
 b.onclick=function(){go("")};
 function go(hint){b.disabled=true;m.textContent="Άνοιγμα σύνδεσης…";
