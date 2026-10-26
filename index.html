@@ -3108,7 +3108,7 @@ function showSetup(u){var s=$("zsetup");s.hidden=false;$("zsn").value=(u.name||"
   if(n.length<1||n.length>40){m.textContent="Γράψε ένα όνομα (έως 40 χαρακτήρες).";return}
   if(!/^[a-z0-9_]{3,20}$/.test(h)){m.textContent="Το όνομα χρήστη πρέπει να έχει 3 έως 20 λατινικά γράμματα, αριθμούς ή κάτω παύλα.";return}
   $("zsb").disabled=true;m.textContent="Δημιουργία…";
-  ZAUTH.claim(n,h).then(function(info){rememberAcct(info);finish(info)}).catch(function(er){$("zsb").disabled=false;var c=er&&er.code||"";m.textContent=c=="permission-denied"?"Το όνομα χρήστη είναι ήδη πιασμένο (ή δεν έχουν ενημερωθεί οι κανόνες της βάσης). Δοκίμασε άλλο.":"Δεν δημιουργήθηκε ο λογαριασμός. Κωδικός: "+(c||"?")})}}
+  ZAUTH.claim(n,h).then(function(info){rememberAcct(info);finish(info)}).catch(function(er){$("zsb").disabled=false;var c=er&&er.code||"";m.textContent=c=="timeout"?"Δεν απάντησε η βάση δεδομένων (Firestore). Έλεγξε στο Firebase ότι έχει δημιουργηθεί η Firestore Database και ότι οι κανόνες επιτρέπουν εγγραφή. Κωδικός: timeout":c=="permission-denied"?"Το όνομα χρήστη είναι ήδη πιασμένο (ή δεν έχουν ενημερωθεί οι κανόνες της βάσης). Δοκίμασε άλλο.":"Δεν δημιουργήθηκε ο λογαριασμός. Κωδικός: "+(c||"?")})}}
 document.addEventListener("zauth",function(e){var d=e.detail||{};clearTimeout(t0);
  if(d.error){b.disabled=true;m.textContent="Δεν ήταν δυνατή η φόρτωση της σύνδεσης. Ανανέωσε τη σελίδα.";gs.hidden=false;return}
  var u=d.user;if(!u){try{localStorage.removeItem("dolphin_uid")}catch(x){}if(guest)return guestMode();return ready()}
@@ -3174,16 +3174,16 @@ render();
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,setPersistence,browserLocalPersistence,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{getFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,query,orderBy,limit,onSnapshot,writeBatch}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{getFirestore,initializeFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,query,orderBy,limit,onSnapshot,writeBatch}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyBz1W_IIb9JQ1rJu2SAIFffUSFgMMdA4Dk",authDomain:"dolphin-80a53.firebaseapp.com",projectId:"dolphin-80a53",storageBucket:"dolphin-80a53.firebasestorage.app",messagingSenderId:"8833059030",appId:"1:8833059030:web:ce12d420bca205f8d32177"};
 const emit=d=>document.dispatchEvent(new CustomEvent("zauth",{detail:d}));
 try{
- const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app),prov=new GoogleAuthProvider();
+ const app=initializeApp(cfg),auth=getAuth(app),db=initializeFirestore(app,{experimentalAutoDetectLongPolling:true},"dolphin"),prov=new GoogleAuthProvider();
  window.ZFB={
   publish:(p,u)=>addDoc(collection(db,"posts"),{uid:u.uid,un:u.un,name:(u.name||"").slice(0,60),photo:u.photo||"",t:String(p.t).slice(0,500),loc:String(p.loc||"").slice(0,80),ts:serverTimestamp()}).then(r=>r.id),
   watch:cb=>onSnapshot(query(collection(db,"posts"),orderBy("ts","desc"),limit(50)),sn=>cb(sn.docs.map(d=>{const x=d.data();return{id:d.id,uid:x.uid,un:x.un,name:x.name,photo:x.photo,t:x.t,loc:x.loc,ts:x.ts?x.ts.toMillis():Date.now()}})),e=>console.warn("posts",e))};
  window.ZCLAIM=async(name,h)=>{const u=auth.currentUser,b=writeBatch(db);b.set(doc(db,"usernames",h),{uid:u.uid});
-  b.set(doc(db,"users",u.uid),{name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true,createdAt:serverTimestamp(),lastLogin:serverTimestamp()});await b.commit();const r={uid:u.uid,name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true,email:u.email||""};try{localStorage.setItem("dolphin_prof_"+u.uid,JSON.stringify(r))}catch(e){}return r};
+  b.set(doc(db,"users",u.uid),{name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true,createdAt:serverTimestamp(),lastLogin:serverTimestamp()});await Promise.race([b.commit(),new Promise((_,rj)=>setTimeout(()=>rj({code:'timeout'}),12000))]);const r={uid:u.uid,name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true,email:u.email||""};try{localStorage.setItem("dolphin_prof_"+u.uid,JSON.stringify(r))}catch(e){}return r};
  window.ZAUTH={claim:(n,h)=>window.ZCLAIM(n,h),
   signIn:h=>{prov.setCustomParameters(h?{login_hint:h,prompt:'select_account'}:{prompt:'select_account'});return signInWithPopup(auth,prov).catch(e=>{const c=e&&e.code||'';if(c=='auth/popup-blocked'||c=='auth/operation-not-supported-in-this-environment')return signInWithRedirect(auth,prov);throw e})},
   signOut:()=>signOut(auth)};
