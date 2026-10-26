@@ -3091,7 +3091,12 @@ document.addEventListener("click",function(e){var x=e.target.closest&&e.target.c
 (function(){
 var g=$("zlogin"),m=$("zlm"),b=$("zgb"),gs=$("zgs"),ZU=null,t0=setTimeout(function(){m.textContent="Η σύνδεση δεν φορτώνει. Έλεγξε το internet ή άνοιξε την εφαρμογή από τη διεύθυνση https://.";gs.hidden=false},9000);
 function enter(){g.classList.add("hide")}
-function ready(){clearTimeout(t0);b.disabled=false;m.textContent="";gs.hidden=false}
+function accts(){try{return JSON.parse(localStorage.getItem("dolphin_accts")||"[]")}catch(x){return[]}}
+function rememberAcct(u){try{var o=accts().filter(function(a){return a.uid===u.uid})[0]||{};var l=accts().filter(function(a){return a.uid!==u.uid});l.unshift({uid:u.uid,name:u.name||o.name||"",photo:u.photo||"",un:u.un||"",email:u.email||o.email||""});localStorage.setItem("dolphin_accts",JSON.stringify(l.slice(0,4)))}catch(x){}}
+function showAccts(){var l=accts();if(!l.length||$("zacl"))return;var d=document.createElement("div");d.id="zacl";d.style.cssText="display:flex;flex-direction:column;gap:8px;margin:0 0 12px;width:100%";
+ l.forEach(function(a){var bt=document.createElement("button");bt.className="zgst";bt.style.cssText="width:100%";bt.textContent="Συνέχεια ως "+(a.name||a.un||"λογαριασμός");bt.onclick=function(){go(a.email)};d.appendChild(bt)});
+ b.parentNode.insertBefore(d,b)}
+function ready(){clearTimeout(t0);b.disabled=false;m.textContent="";gs.hidden=false;showAccts()}
 var guest=false;try{guest=sessionStorage.getItem("zguest")=="1"}catch(e){}
 function finish(u){ZU=window.ZUSER=u;try{sessionStorage.removeItem("zguest")}catch(x){}window.ZGUEST=false;var gb=$("zgbar");if(gb)gb.remove();
  if(!EX.me||EX.me.un!==u.un){ME.n=u.name||ME.n;ME.un=u.un;EX.me={n:ME.n,bio:ME.bio||"",g:ME.g,un:ME.un};save()}
@@ -3103,20 +3108,23 @@ function showSetup(u){var s=$("zsetup");s.hidden=false;$("zsn").value=(u.name||"
   if(n.length<1||n.length>40){m.textContent="Γράψε ένα όνομα (έως 40 χαρακτήρες).";return}
   if(!/^[a-z0-9_]{3,20}$/.test(h)){m.textContent="Το όνομα χρήστη πρέπει να έχει 3 έως 20 λατινικά γράμματα, αριθμούς ή κάτω παύλα.";return}
   $("zsb").disabled=true;m.textContent="Δημιουργία…";
-  ZAUTH.claim(n,h).then(function(info){finish(info)}).catch(function(er){$("zsb").disabled=false;var c=er&&er.code||"";m.textContent=c=="permission-denied"?"Το όνομα χρήστη είναι ήδη πιασμένο (ή δεν έχουν ενημερωθεί οι κανόνες της βάσης). Δοκίμασε άλλο.":"Δεν δημιουργήθηκε ο λογαριασμός. Κωδικός: "+(c||"?")})}}
+  ZAUTH.claim(n,h).then(function(info){rememberAcct(info);finish(info)}).catch(function(er){$("zsb").disabled=false;var c=er&&er.code||"";m.textContent=c=="permission-denied"?"Το όνομα χρήστη είναι ήδη πιασμένο (ή δεν έχουν ενημερωθεί οι κανόνες της βάσης). Δοκίμασε άλλο.":"Δεν δημιουργήθηκε ο λογαριασμός. Κωδικός: "+(c||"?")})}}
 document.addEventListener("zauth",function(e){var d=e.detail||{};clearTimeout(t0);
  if(d.error){b.disabled=true;m.textContent="Δεν ήταν δυνατή η φόρτωση της σύνδεσης. Ανανέωσε τη σελίδα.";gs.hidden=false;return}
  var u=d.user;if(!u){try{localStorage.removeItem("dolphin_uid")}catch(x){}if(guest)return guestMode();return ready()}
  var st="";try{st=localStorage.getItem("dolphin_uid")||""}catch(x){}
- if(st!==u.uid){try{localStorage.setItem("dolphin_uid",u.uid)}catch(x){}location.reload();return}
+ if(st!==u.uid){try{localStorage.setItem("dolphin_uid",u.uid)}catch(x){}if(st){location.reload();return}window.__ZUID=String(u.uid).replace(/[^\w-]/g,"");KEY="dolphin_v1_"+window.__ZUID}if(!d.needSetup)rememberAcct(u);
  if(d.needSetup)return showSetup(u);
  finish(u)});
-b.onclick=function(){b.disabled=true;m.textContent="Άνοιγμα σύνδεσης…";
+b.onclick=function(){go("")};
+function go(hint){b.disabled=true;m.textContent="Άνοιγμα σύνδεσης…";
  if(!window.ZAUTH){m.textContent="Η σύνδεση δεν είναι έτοιμη ακόμα.";b.disabled=false;return}
  if(location.protocol=="file:"){m.textContent="Η σύνδεση με Google δουλεύει μόνο από διεύθυνση https:// (όχι από αρχείο στη συσκευή).";b.disabled=false;return}
- ZAUTH.signIn().catch(function(er){b.disabled=false;var c=er&&er.code||"?";m.textContent=c=="auth/popup-closed-by-user"||c=="auth/cancelled-popup-request"?"Η σύνδεση ακυρώθηκε.":c=="auth/unauthorized-domain"?"Η διεύθυνση δεν είναι εγκεκριμένη στο Firebase (Authentication → Settings → Authorized domains). Κωδικός: "+c:c=="auth/popup-blocked"?"Ο browser μπλόκαρε το παράθυρο. Επίτρεψε τα αναδυόμενα παράθυρα ή άνοιξε τη διεύθυνση από Safari/Chrome.":c=="auth/network-request-failed"?"Πρόβλημα δικτύου. Δοκίμασε ξανά.":c=="auth/operation-not-supported-in-this-environment"||c=="auth/web-storage-unsupported"?"Αυτός ο browser δεν υποστηρίζει τη σύνδεση. Άνοιξε τη διεύθυνση από Safari ή Chrome.":"Η σύνδεση απέτυχε. Κωδικός: "+c});
- setTimeout(function(){if(b.disabled&&m.textContent=="Άνοιγμα σύνδεσης…"){b.disabled=false;m.textContent="Η σύνδεση δεν ολοκληρώθηκε. Δοκίμασε ξανά ή άνοιξε τη διεύθυνση από Chrome."}},60000)};
+ ZAUTH.signIn(hint).catch(function(er){b.disabled=false;var c=er&&er.code||"?";m.textContent=c=="auth/popup-closed-by-user"||c=="auth/cancelled-popup-request"?"Η σύνδεση ακυρώθηκε.":c=="auth/unauthorized-domain"?"Η διεύθυνση δεν είναι εγκεκριμένη στο Firebase (Authentication → Settings → Authorized domains). Κωδικός: "+c:c=="auth/popup-blocked"?"Ο browser μπλόκαρε το παράθυρο. Επίτρεψε τα αναδυόμενα παράθυρα ή άνοιξε τη διεύθυνση από Safari/Chrome.":c=="auth/network-request-failed"?"Πρόβλημα δικτύου. Δοκίμασε ξανά.":c=="auth/operation-not-supported-in-this-environment"||c=="auth/web-storage-unsupported"?"Αυτός ο browser δεν υποστηρίζει τη σύνδεση. Άνοιξε τη διεύθυνση από Safari ή Chrome.":"Η σύνδεση απέτυχε. Κωδικός: "+c});
+ setTimeout(function(){if(b.disabled&&m.textContent=="Άνοιγμα σύνδεσης…"){b.disabled=false;m.textContent="Η σύνδεση δεν ολοκληρώθηκε. Δοκίμασε ξανά ή άνοιξε τη διεύθυνση από Chrome."}},60000)}
 gs.onclick=function(){try{sessionStorage.setItem("zguest","1")}catch(e){}guest=true;guestMode()};
+/* κουμπί εξόδου στις ρυθμίσεις */
+var _ss=settingsSheet;settingsSheet=function(){_ss.apply(this,arguments);if(!ZU)return;var sh=$("sheet"),cl=sh&&sh.querySelector('[data-close="1"]');if(!cl)return;var bt=document.createElement("button");bt.className="pick";bt.style.cssText="justify-content:center;color:#ff6b6b;margin-top:6px";bt.setAttribute("data-zacc","ask");bt.innerHTML="<span>🚪 Έξοδος λογαριασμού</span>";cl.parentNode.insertBefore(bt,cl)};
 /* κάρτα λογαριασμού στο προφίλ */
 var _pa=profile;profile=function(){var h=_pa();if(!ZU)return h;var c='<div class="card glass" style="padding:12px;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="min-width:0"><small style="color:var(--mute)">Συνδεδεμένος/η με Google</small><br><b>'+esc(ZU.name||"Λογαριασμός")+'</b></span><button class="tag" data-zacc="ask">Αποσύνδεση</button></div>',i=h.indexOf('<div class="tabs glass">');return i<0?h+c:h.slice(0,i)+c+h.slice(i)};
 document.addEventListener("click",function(e){var x=e.target.closest&&e.target.closest("[data-zacc]");if(!x)return;e.preventDefault();e.stopPropagation();
@@ -3165,7 +3173,7 @@ render();
 </script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,setPersistence,browserLocalPersistence,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import{getFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,query,orderBy,limit,onSnapshot,writeBatch}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyBz1W_IIb9JQ1rJu2SAIFffUSFgMMdA4Dk",authDomain:"dolphin-80a53.firebaseapp.com",projectId:"dolphin-80a53",storageBucket:"dolphin-80a53.firebasestorage.app",messagingSenderId:"8833059030",appId:"1:8833059030:web:ce12d420bca205f8d32177"};
 const emit=d=>document.dispatchEvent(new CustomEvent("zauth",{detail:d}));
@@ -3175,15 +3183,17 @@ try{
   publish:(p,u)=>addDoc(collection(db,"posts"),{uid:u.uid,un:u.un,name:(u.name||"").slice(0,60),photo:u.photo||"",t:String(p.t).slice(0,500),loc:String(p.loc||"").slice(0,80),ts:serverTimestamp()}).then(r=>r.id),
   watch:cb=>onSnapshot(query(collection(db,"posts"),orderBy("ts","desc"),limit(50)),sn=>cb(sn.docs.map(d=>{const x=d.data();return{id:d.id,uid:x.uid,un:x.un,name:x.name,photo:x.photo,t:x.t,loc:x.loc,ts:x.ts?x.ts.toMillis():Date.now()}})),e=>console.warn("posts",e))};
  window.ZCLAIM=async(name,h)=>{const u=auth.currentUser,b=writeBatch(db);b.set(doc(db,"usernames",h),{uid:u.uid});
-  b.set(doc(db,"users",u.uid),{name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true,createdAt:serverTimestamp(),lastLogin:serverTimestamp()});await b.commit();return{uid:u.uid,name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true}};
+  b.set(doc(db,"users",u.uid),{name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true,createdAt:serverTimestamp(),lastLogin:serverTimestamp()});await b.commit();const r={uid:u.uid,name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true,email:u.email||""};try{localStorage.setItem("dolphin_prof_"+u.uid,JSON.stringify(r))}catch(e){}return r};
  window.ZAUTH={claim:(n,h)=>window.ZCLAIM(n,h),
-  signIn:()=>signInWithPopup(auth,prov).catch(e=>{const c=e&&e.code||'';if(c=='auth/popup-blocked'||c=='auth/operation-not-supported-in-this-environment')return signInWithRedirect(auth,prov);throw e}),
+  signIn:h=>{prov.setCustomParameters(h?{login_hint:h,prompt:'select_account'}:{prompt:'select_account'});return signInWithPopup(auth,prov).catch(e=>{const c=e&&e.code||'';if(c=='auth/popup-blocked'||c=='auth/operation-not-supported-in-this-environment')return signInWithRedirect(auth,prov);throw e})},
   signOut:()=>signOut(auth)};
- getRedirectResult(auth).catch(e=>console.warn('redirect',e));
+ setPersistence(auth,browserLocalPersistence).catch(()=>{});getRedirectResult(auth).catch(e=>console.warn('redirect',e));
  onAuthStateChanged(auth,async u=>{
   if(!u)return emit({user:null});
-  const name=(u.displayName||"").slice(0,60);let info={uid:u.uid,name,photo:u.photoURL||"",un:"",setup:false};
-  try{const sn=await getDoc(doc(db,"users",u.uid));if(sn.exists()){const d=sn.data();if(d.setup&&d.un){info={uid:u.uid,name:d.name||name,photo:d.photo||info.photo,un:d.un,setup:true}}}}catch(e){console.warn("users",e)}
+  const name=(u.displayName||"").slice(0,60);let info={uid:u.uid,name,photo:u.photoURL||"",un:"",setup:false,email:u.email||""};
+  const ck="dolphin_prof_"+u.uid;let cd=null;try{cd=JSON.parse(localStorage.getItem(ck)||"null")}catch(e){}
+  if(cd&&cd.setup&&cd.un){getDoc(doc(db,"users",u.uid)).then(sn=>{if(sn.exists()){const d=sn.data();if(d.setup&&d.un)localStorage.setItem(ck,JSON.stringify({uid:u.uid,name:d.name||name,photo:d.photo||info.photo,un:d.un,setup:true}))}}).catch(()=>{});return emit({user:Object.assign({},cd,{email:u.email||""}),needSetup:false})}
+  try{const sn=await getDoc(doc(db,"users",u.uid));if(sn.exists()){const d=sn.data();if(d.setup&&d.un){info={uid:u.uid,name:d.name||name,photo:d.photo||info.photo,un:d.un,setup:true,email:u.email||""};try{localStorage.setItem(ck,JSON.stringify(info))}catch(e){}}}}catch(e){console.warn("users",e)}
   emit({user:info,needSetup:!info.setup})})
 }catch(e){console.error(e);emit({error:1})}
 </script>
