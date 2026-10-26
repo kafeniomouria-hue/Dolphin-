@@ -966,7 +966,7 @@ document.addEventListener("click",function(e){
 /*CSS*/
 /* ---- v8: clickable names -> user profile, admin badges inside profile ---- */
 var NAV=[];
-function isAdmin(){return bdg(ME)=="gold"}
+function isAdmin(){return window.ZADMIN===true}
 function openUser(h){
  if(!h)return;
  if(h=="@esy"){cur="profile";tab="waves";sv=null}
@@ -3098,10 +3098,10 @@ function showAccts(){var l=accts();if(!l.length||$("zacl"))return;var d=document
  b.parentNode.insertBefore(d,b)}
 function ready(){clearTimeout(t0);b.disabled=false;m.textContent="";gs.hidden=false;showAccts()}
 var guest=false;try{guest=sessionStorage.getItem("zguest")=="1"}catch(e){}
-function finish(u){ZU=window.ZUSER=u;try{sessionStorage.removeItem("zguest")}catch(x){}window.ZGUEST=false;var gb=$("zgbar");if(gb)gb.remove();
+function finish(u){ZU=window.ZUSER=u;window.ZADMIN=false;try{EX.bg["@esy"]=""}catch(x){}try{window.ZFB&&ZFB.isAdmin().then(function(a){if(a===true){window.ZADMIN=true;EX.bg["@esy"]="gold";save();render()}})}catch(x){}try{sessionStorage.removeItem("zguest")}catch(x){}window.ZGUEST=false;var gb=$("zgbar");if(gb)gb.remove();
  if(!EX.me||EX.me.un!==u.un){ME.n=u.name||ME.n;ME.un=u.un;EX.me={n:ME.n,bio:ME.bio||"",g:ME.g,un:ME.un};save()}
  $("zsetup").hidden=true;enter();render();toast("👋 Καλώς ήρθες, "+(u.name||"").split(" ")[0]);if(window.ZFB)ZFB.watch(function(l){window.ZONPOSTS&&ZONPOSTS(l)})}
-function guestMode(){window.ZGUEST=true;enter();if(!$("zgbar")){var d=document.createElement("div");d.id="zgbar";d.innerHTML='👀 Βλέπεις ως επισκέπτης <button>Σύνδεση</button>';d.querySelector("button").onclick=function(){try{sessionStorage.removeItem("zguest")}catch(x){}location.reload()};document.body.appendChild(d)}
+function guestMode(){window.ZGUEST=true;window.ZADMIN=false;try{EX.bg["@esy"]=""}catch(x){}enter();if(!$("zgbar")){var d=document.createElement("div");d.id="zgbar";d.innerHTML='👀 Βλέπεις ως επισκέπτης <button>Σύνδεση</button>';d.querySelector("button").onclick=function(){try{sessionStorage.removeItem("zguest")}catch(x){}location.reload()};document.body.appendChild(d)}
  try{if(window.ZFB)ZFB.watch(function(l){window.ZONPOSTS&&ZONPOSTS(l)})}catch(x){}render()}
 function slug(t){var M={α:"a",ά:"a",β:"v",γ:"g",δ:"d",ε:"e",έ:"e",ζ:"z",η:"i",ή:"i",θ:"th",ι:"i",ί:"i",ϊ:"i",ΐ:"i",κ:"k",λ:"l",μ:"m",ν:"n",ξ:"x",ο:"o",ό:"o",π:"p",ρ:"r",σ:"s",ς:"s",τ:"t",υ:"y",ύ:"y",ϋ:"y",ΰ:"y",φ:"f",χ:"ch",ψ:"ps",ω:"o",ώ:"o"};
  return String(t||"").toLowerCase().split("").map(function(c){return M[c]!==undefined?M[c]:c}).join("").normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9_]/g,"").slice(0,16)}
@@ -3133,8 +3133,9 @@ gs.onclick=function(){try{sessionStorage.setItem("zguest","1")}catch(e){}guest=t
 /* κουμπί εξόδου στις ρυθμίσεις */
 var _ss=settingsSheet;settingsSheet=function(){_ss.apply(this,arguments);if(!ZU)return;var sh=$("sheet"),cl=sh&&sh.querySelector('[data-close="1"]');if(!cl)return;var bt=document.createElement("button");bt.className="pick";bt.style.cssText="justify-content:center;color:#ff6b6b;margin-top:6px";bt.setAttribute("data-zacc","ask");bt.innerHTML="<span>🚪 Έξοδος λογαριασμού</span>";cl.parentNode.insertBefore(bt,cl)};
 /* κάρτα λογαριασμού στο προφίλ */
-var _pa=profile;profile=function(){var h=_pa();if(!ZU)return h;var c='<div class="card glass" style="padding:12px;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="min-width:0"><small style="color:var(--mute)">Συνδεδεμένος/η με Google</small><br><b>'+esc(ZU.name||"Λογαριασμός")+'</b></span><button class="tag" data-zacc="ask">Αποσύνδεση</button></div>',i=h.indexOf('<div class="tabs glass">');return i<0?h+c:h.slice(0,i)+c+h.slice(i)};
+var _pa=profile;profile=function(){var h=_pa();if(!ZU)return h;var c='<div class="card glass" style="padding:12px;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="min-width:0"><small style="color:var(--mute)">Συνδεδεμένος/η με Google</small><br><b>'+esc(ZU.name||"Λογαριασμός")+'</b></span><span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end"><button class="tag" data-zacc="uid">Αντιγραφή UID</button><button class="tag" data-zacc="ask">Αποσύνδεση</button></span></div>',i=h.indexOf('<div class="tabs glass">');return i<0?h+c:h.slice(0,i)+c+h.slice(i)};
 document.addEventListener("click",function(e){var x=e.target.closest&&e.target.closest("[data-zacc]");if(!x)return;e.preventDefault();e.stopPropagation();
+ if(x.dataset.zacc=="uid"){var id=ZU&&ZU.uid||"";var ok=function(){toast("📋 Το UID αντιγράφηκε")};var fb=function(){sheet('<h3>Το UID σου</h3><p style="word-break:break-all;user-select:all;margin-bottom:12px"><b>'+esc(id)+'</b></p><button class="tag" data-close="1">Κλείσιμο</button>')};try{navigator.clipboard.writeText(id).then(ok,fb)}catch(x){fb()}return}
  if(x.dataset.zacc=="ask"){sheet('<h3>Αποσύνδεση</h3><p style="margin-bottom:12px">Τα δεδομένα σου μένουν αποθηκευμένα και θα τα βρεις όταν ξανασυνδεθείς.</p><button class="btn" data-zacc="out" style="width:100%">Αποσύνδεση</button><div style="height:8px"></div><button class="tag" data-close="1">Ακύρωση</button>');return}
  var done=function(){try{localStorage.removeItem("dolphin_uid")}catch(x){}location.reload()};window.ZAUTH?ZAUTH.signOut().then(done,done):done()},true);
 })();
@@ -3187,6 +3188,7 @@ const emit=d=>document.dispatchEvent(new CustomEvent("zauth",{detail:d}));
 try{
  const app=initializeApp(cfg),auth=getAuth(app),db=initializeFirestore(app,{experimentalAutoDetectLongPolling:true},"dolphin"),prov=new GoogleAuthProvider();
  window.ZFB={
+  isAdmin:()=>auth.currentUser?getDoc(doc(db,"admins",auth.currentUser.uid)).then(s=>s.exists()).catch(()=>false):Promise.resolve(false),
   publish:(p,u)=>addDoc(collection(db,"posts"),{uid:u.uid,un:u.un,name:(u.name||"").slice(0,60),photo:u.photo||"",t:String(p.t).slice(0,500),loc:String(p.loc||"").slice(0,80),ts:serverTimestamp()}).then(r=>r.id),
   watch:cb=>onSnapshot(query(collection(db,"posts"),orderBy("ts","desc"),limit(50)),sn=>cb(sn.docs.map(d=>{const x=d.data();return{id:d.id,uid:x.uid,un:x.un,name:x.name,photo:x.photo,t:x.t,loc:x.loc,ts:x.ts?x.ts.toMillis():Date.now()}})),e=>console.warn("posts",e))};
  window.ZCLAIM=async(name,h)=>{const u=auth.currentUser,b=writeBatch(db);b.set(doc(db,"usernames",h),{uid:u.uid});
