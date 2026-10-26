@@ -3177,17 +3177,40 @@ document.addEventListener("click",function(e){if(!e.target.closest||!e.target.cl
   ZFB.publish(p,ZUSER).then(function(id){p.fid=id;save()}).catch(function(er){p.fp=0;toast("Δεν στάλθηκε στην κοινή ροή ("+(er&&er.code||"σφάλμα")+")")})},150)},true);
 })();
 
+/* v36: κοινά Splash / Echo / Απαντήσεις μέσω Firestore */
+(function(){
+var RX=[],RP=[],started=0;
+function nid2(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return Math.abs(h)}
+function uobj(x){if(window.ZUSER&&x.uid===ZUSER.uid)return ME;var u=U.filter(function(y){return y.uid===x.uid})[0];
+ if(!u){u={n:x.name||"Χρήστης",h:x.un||"@user",g:x.photo?"url('"+x.photo+"') center/cover":G[nid2(x.uid)%6],uid:x.uid};U.push(u)}return u}
+function apply(){var me=window.ZUSER&&ZUSER.uid,cnt={},rep={};
+ RX.forEach(function(r){var c=cnt[r.pid]=cnt[r.pid]||{s:0,e:0,ms:0,me:0};if(r.uid===me){if(r.k=="s")c.ms=1;else c.me=1}else if(r.k=="s"||r.k=="e")c[r.k]++});
+ RP.forEach(function(r){(rep[r.pid]=rep[r.pid]||[]).push(r)});
+ all().forEach(function(p){if(!p.fid)return;var c=cnt[p.fid]||{s:0,e:0,ms:0,me:0};p.s=c.s;p.e=c.e;p.ls=c.ms?1:0;p.le=c.me?1:0;
+  p.r=(rep[p.fid]||[]).map(function(r){return{u:uobj(r),t:r.t,n:0,l:0,sub:[],rf:1}})});
+ var ae=document.activeElement;if(!(ae&&/^(INPUT|TEXTAREA|SELECT)$/.test(ae.tagName))){var v=$("view"),y=v?v.scrollTop:0;render();if(v)v.scrollTop=y}}
+var _op=window.ZONPOSTS;if(_op)window.ZONPOSTS=function(l){_op(l);apply()};
+setInterval(function(){if(started||!window.ZFB||!ZFB.watchX||!(window.ZUSER||window.ZGUEST))return;started=1;
+ ZFB.watchX(function(l){RX=l;apply()},function(l){RP=l;apply()})},600);
+document.addEventListener("click",function(e){var t=e.target.closest&&e.target.closest('[data-a="s"],[data-a="e"],[data-send]');if(!t||!window.ZFB||!window.ZUSER)return;var d=t.dataset,fail=function(er){toast("Δεν αποθηκεύτηκε στην κοινή ροή ("+(er&&er.code||"σφάλμα")+")")};
+ if(d.a){if(d.a!="s"&&d.a!="e")return;var p=find(+d.id);if(!p||!p.fid)return;setTimeout(function(){ZFB.react(p.fid,d.a,!!(d.a=="s"?p.ls:p.le)).catch(fail)},0);return}
+ if(d.send){var q=find(+d.send),i=document.querySelector('[data-in="'+d.send+'"]'),v=i&&i.value.trim();if(q&&q.fid&&v)ZFB.reply(q.fid,v,ZUSER).catch(fail)}},true);
+})();
+
 render();
 </script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,setPersistence,browserLocalPersistence,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{getFirestore,initializeFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,query,orderBy,limit,onSnapshot,writeBatch}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{getFirestore,initializeFirestore,deleteDoc,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,query,orderBy,limit,onSnapshot,writeBatch}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyBz1W_IIb9JQ1rJu2SAIFffUSFgMMdA4Dk",authDomain:"dolphin-80a53.firebaseapp.com",projectId:"dolphin-80a53",storageBucket:"dolphin-80a53.firebasestorage.app",messagingSenderId:"8833059030",appId:"1:8833059030:web:ce12d420bca205f8d32177"};
 const emit=d=>document.dispatchEvent(new CustomEvent("zauth",{detail:d}));
 try{
  const app=initializeApp(cfg),auth=getAuth(app),db=initializeFirestore(app,{experimentalAutoDetectLongPolling:true},"dolphin"),prov=new GoogleAuthProvider();
  window.ZFB={
+  react:(pid,k,on)=>{const u=auth.currentUser;if(!u)return Promise.reject({code:"auth"});const r=doc(db,"reactions",pid+"_"+k+"_"+u.uid);return on?setDoc(r,{pid:pid,uid:u.uid,k:k}):deleteDoc(r)},
+  reply:(pid,t,x)=>addDoc(collection(db,"replies"),{pid:pid,uid:x.uid,un:x.un||"",name:(x.name||"").slice(0,60),photo:x.photo||"",t:String(t).slice(0,300),ts:serverTimestamp()}),
+  watchX:(cbR,cbP)=>{onSnapshot(query(collection(db,"reactions"),limit(5000)),sn=>cbR(sn.docs.map(d=>d.data())),e=>console.warn("rx",e));onSnapshot(query(collection(db,"replies"),orderBy("ts","asc"),limit(1000)),sn=>cbP(sn.docs.map(d=>{const x=d.data();return{id:d.id,pid:x.pid,uid:x.uid,un:x.un,name:x.name,photo:x.photo,t:x.t}})),e=>console.warn("rp",e))},
   isAdmin:()=>auth.currentUser?getDoc(doc(db,"admins",auth.currentUser.uid)).then(s=>{window.ZADMINERR=s.exists()?"ok":"δεν βρέθηκε έγγραφο admins/"+auth.currentUser.uid;return s.exists()}).catch(e=>{window.ZADMINERR=(e&&e.code)||String(e);return false}):Promise.resolve(false),
   publish:(p,u)=>addDoc(collection(db,"posts"),{uid:u.uid,un:u.un,name:(u.name||"").slice(0,60),photo:u.photo||"",t:String(p.t).slice(0,500),loc:String(p.loc||"").slice(0,80),ts:serverTimestamp()}).then(r=>r.id),
   watch:cb=>onSnapshot(query(collection(db,"posts"),orderBy("ts","desc"),limit(50)),sn=>cb(sn.docs.map(d=>{const x=d.data();return{id:d.id,uid:x.uid,un:x.un,name:x.name,photo:x.photo,t:x.t,loc:x.loc,ts:x.ts?x.ts.toMillis():Date.now()}})),e=>console.warn("posts",e))};
