@@ -2865,7 +2865,7 @@ var _nt27=notifs;notifs=function(){var h=_nt27();return h.replace(/<button class
  return b.replace('<span style="font-size:20px">','<span class="zhrt" data-zh="'+i+'" role="button" tabindex="0" aria-label="Στείλε καρδούλα" style="font-size:22px;padding:6px;cursor:pointer">'+(n.hz?"❤️":"🤍")+'</span><span style="font-size:20px">')})};
 $("view").addEventListener("click",function(e){var x=e.target.closest&&e.target.closest("[data-zh]");if(!x)return;e.stopPropagation();e.preventDefault();var n=N[+x.dataset.zh];if(!n||n.hz)return;n.hz=1;n.un=0;save();
  addN("❤️",n.u,"δέχτηκε την καρδούλα σου");},true);
-setInterval(function(){var mine=C.filter(function(c){return c.u===ME&&Date.now()-(c.at||0)<864e5});if(!mine.length||Math.random()>.4)return;
+setInterval(function(){return;
  var st=mine[0];st.nrx=st.nrx||0;if(st.nrx>=5)return;var pool=U.filter(function(u){return u!==ME&&EX.blk.indexOf(u.h)<0});if(!pool.length)return;
  var u=pool[Math.floor(Math.random()*pool.length)],em=["🔥","👏","😍","😂","🐬","😮","🥹","💯"][Math.floor(Math.random()*8)],k=dmWith(u);if(k==null||!D[k])return;st.nrx++;
  D[k].m.push({me:0,t:"Αντίδραση "+em+" στην ιστορία σου"});D[k].un=(D[k].un||0)+1;save();badge();toast(u.n+": "+em+" στην ιστορία σου");window.ZPUSH&&ZPUSH(u.n,em+" στην ιστορία σου","dm");if(cur=="dm"&&(dm===null||dm===k))render()},20000);
@@ -2972,12 +2972,12 @@ function needs(f){return/^image\/(jpeg|png|webp|heic|heif)$/i.test(f.type)&&f.si
 function comp(f){return(window.createImageBitmap?createImageBitmap(f,{imageOrientation:"from-image"}):Promise.reject()).then(function(b){
  var m=1600,s=Math.min(1,m/Math.max(b.width,b.height)),c=document.createElement("canvas");c.width=Math.round(b.width*s);c.height=Math.round(b.height*s);var x=c.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,c.width,c.height);x.drawImage(b,0,0,c.width,c.height);if(b.close)b.close();
  return new Promise(function(ok){c.toBlob(function(bl){ok(bl&&bl.size<f.size?new File([bl],f.name.replace(/\.\w+$/,"")+".jpg",{type:"image/jpeg",lastModified:Date.now()}):f)},"image/jpeg",.82)})}).catch(function(){return f})}
-function onCh(e){var i=e.target;if(!i||i.type!="file"||i._zs)return;var fs=[].slice.call(i.files||[]);if(!fs.some(needs))return;e.stopImmediatePropagation();toast("🗜️ Συμπίεση εικόνας…");
+function onCh(e){var i=e.target;if(!i||i.type!="file"||i._zs)return;if([].some.call(i.files||[],function(f){return/^image\//i.test(f.type)||/\.(jpe?g|png|webp|heic|heif|gif|bmp)$/i.test(f.name)})){e.stopImmediatePropagation();i.value="";toast("📵 Οι φωτογραφίες δεν επιτρέπονται προς το παρόν");return}var fs=[].slice.call(i.files||[]);if(!fs.some(needs))return;e.stopImmediatePropagation();toast("🗜️ Συμπίεση εικόνας…");
  var before=fs.reduce(function(a,f){return a+f.size},0);
  Promise.all(fs.map(function(f){return needs(f)?comp(f):f})).then(function(o){try{var dt=new DataTransfer();o.forEach(function(f){dt.items.add(f)});i.files=dt.files;var after=o.reduce(function(a,f){return a+f.size},0);toast("✓ "+(before/1048576).toFixed(1).replace(".",",")+" MB → "+(after/1048576).toFixed(1).replace(".",",")+" MB")}catch(x){}
   i._zs=1;try{i.dispatchEvent(new Event("change",{bubbles:true}))}finally{i._zs=0}})}
 document.addEventListener("change",onCh,true);
-var _ck=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.type=="file"&&!this._zc&&!this.isConnected){this._zc=1;this.addEventListener("change",onCh,true)}return _ck.apply(this,arguments)};
+var _ck=HTMLInputElement.prototype.click;HTMLInputElement.prototype.click=function(){if(this.type=="file"&&/image\/\*,\s*video/.test(this.accept))this.accept="video/*";if(this.type=="file"&&!this._zc&&!this.isConnected){this._zc=1;this.addEventListener("change",onCh,true)}return _ck.apply(this,arguments)};
 /* lazy loading εικόνων/βίντεο */
 var io=window.IntersectionObserver?new IntersectionObserver(function(es){es.forEach(function(en){if(!en.isIntersecting)return;var x=en.target;io.unobserve(x);x.preload="metadata";try{x.load()}catch(e){}})},{root:$("view"),rootMargin:"500px 0px"}):null;
 function lazy(){var v=$("view");[].forEach.call(v.querySelectorAll("img:not([loading])"),function(i){i.loading="lazy";i.decoding="async"});
@@ -3058,8 +3058,8 @@ document.addEventListener("click",function(e){var x=e.target.closest&&e.target.c
 $("zshc").onclick=wHome;
 /* χρονιστές: bonus, boost προβολές, ξεκλειδώματα */
 setInterval(function(){crew();var now=Date.now();all().forEach(function(p){if(p.u!==ME)return;
-  if(p.zb>now){p.zi=(p.zi||0)+Math.floor(8+Math.random()*25);if(Math.random()<.4)p.s=(p.s||0)+1}
-  if(p.ppv&&(p.zu||0)<8&&Math.random()<.25){var o=U[Math.floor(Math.random()*U.length)];p.zu=(p.zu||0)+1;SH.add(Math.floor(p.ppv*.9),"Ξεκλείδωμα Wave από "+o.n)}})},15000);
+  
+  if(false){var o=U[Math.floor(Math.random()*U.length)];p.zu=(p.zu||0)+1;SH.add(Math.floor(p.ppv*.9),"Ξεκλείδωμα Wave από "+o.n)}})},15000);
 if(S.demo===undefined){S.demo=1;var dp=P.filter(function(p){return p.u!==ME})[3];if(dp&&!dp.ppv)dp.ppv=20}
 crew();mcheck();
 })();
@@ -3088,13 +3088,14 @@ document.addEventListener("zauth",function(e){var d=e.detail||{};clearTimeout(t0
  var u=d.user;if(!u){try{localStorage.removeItem("dolphin_uid")}catch(x){}if(guest)return enter();return ready()}
  var st="";try{st=localStorage.getItem("dolphin_uid")||""}catch(x){}
  if(st!==u.uid){try{localStorage.setItem("dolphin_uid",u.uid)}catch(x){}location.reload();return}
- ZU=u;try{sessionStorage.removeItem("zguest")}catch(x){}
+ ZU=window.ZUSER=u;try{sessionStorage.removeItem("zguest")}catch(x){}
  if(!EX.me){ME.n=u.name||ME.n;ME.un=u.un||ME.un;EX.me={n:ME.n,bio:ME.bio||"",g:ME.g,un:ME.un};save()}
- enter();render();toast("👋 Καλώς ήρθες, "+(u.name||"").split(" ")[0])});
+ enter();render();toast("👋 Καλώς ήρθες, "+(u.name||"").split(" ")[0]);if(window.ZFB)ZFB.watch(function(l){window.ZONPOSTS&&ZONPOSTS(l)})});
 b.onclick=function(){b.disabled=true;m.textContent="Άνοιγμα σύνδεσης…";
  if(!window.ZAUTH){m.textContent="Η σύνδεση δεν είναι έτοιμη ακόμα.";b.disabled=false;return}
  if(location.protocol=="file:"){m.textContent="Η σύνδεση με Google δουλεύει μόνο από διεύθυνση https:// (όχι από αρχείο στη συσκευή).";b.disabled=false;return}
- ZAUTH.signIn().catch(function(er){b.disabled=false;var c=er&&er.code||"";m.textContent=c=="auth/popup-closed-by-user"||c=="auth/cancelled-popup-request"?"Η σύνδεση ακυρώθηκε.":c=="auth/unauthorized-domain"?"Η διεύθυνση αυτή δεν είναι εγκεκριμένη στο Firebase.":c=="auth/network-request-failed"?"Πρόβλημα δικτύου. Δοκίμασε ξανά.":"Η σύνδεση απέτυχε. Δοκίμασε ξανά."})};
+ ZAUTH.signIn().catch(function(er){b.disabled=false;var c=er&&er.code||"?";m.textContent=c=="auth/popup-closed-by-user"||c=="auth/cancelled-popup-request"?"Η σύνδεση ακυρώθηκε.":c=="auth/unauthorized-domain"?"Η διεύθυνση δεν είναι εγκεκριμένη στο Firebase (Authentication → Settings → Authorized domains). Κωδικός: "+c:c=="auth/popup-blocked"?"Ο browser μπλόκαρε το παράθυρο. Επίτρεψε τα αναδυόμενα παράθυρα ή άνοιξε τη διεύθυνση από Safari/Chrome.":c=="auth/network-request-failed"?"Πρόβλημα δικτύου. Δοκίμασε ξανά.":c=="auth/operation-not-supported-in-this-environment"||c=="auth/web-storage-unsupported"?"Αυτός ο browser δεν υποστηρίζει τη σύνδεση. Άνοιξε τη διεύθυνση από Safari ή Chrome.":"Η σύνδεση απέτυχε. Κωδικός: "+c});
+ setTimeout(function(){if(b.disabled&&m.textContent=="Άνοιγμα σύνδεσης…"){b.disabled=false;m.textContent="Δεν άνοιξε παράθυρο σύνδεσης. Επίτρεψε τα αναδυόμενα παράθυρα ή δοκίμασε από Safari/Chrome."}},8000)};
 gs.onclick=function(){try{sessionStorage.setItem("zguest","1")}catch(e){}guest=true;enter()};
 /* κάρτα λογαριασμού στο προφίλ */
 var _pa=profile;profile=function(){var h=_pa();if(!ZU)return h;var c='<div class="card glass" style="padding:12px;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="min-width:0"><small style="color:var(--mute)">Συνδεδεμένος/η με Google</small><br><b>'+esc(ZU.name||"Λογαριασμός")+'</b></span><button class="tag" data-zacc="ask">Αποσύνδεση</button></div>',i=h.indexOf('<div class="tabs glass">');return i<0?h+c:h.slice(0,i)+c+h.slice(i)};
@@ -3103,18 +3104,58 @@ document.addEventListener("click",function(e){var x=e.target.closest&&e.target.c
  var done=function(){try{localStorage.removeItem("dolphin_uid")}catch(x){}location.reload()};window.ZAUTH?ZAUTH.signOut().then(done,done):done()},true);
 })();
 
+/* v34: ποστ μόνο με κείμενο */
+(function(){function strip(){all().forEach(function(p){if(p.u===ME)return;if(p.im&&!/^url\(/.test(p.im))p.im=null;if(p.ims&&p.ims.length&&!/^url\(/.test(p.ims[0]))p.ims=null})}
+strip();var _rs=render;render=function(){strip();return _rs.apply(this,arguments)};
+var _bd=boards;boards=function(){var h=_bd();return h.indexOf('class="reel"')<0?'<div class="empty">Τα Πινάκια θα εμφανιστούν όταν επιτραπούν οι φωτογραφίες 📷</div>':h}})();
+
+/* v35: μόνο πραγματικοί χρήστες (χωρίς bots) + κοινή ροή από Firestore */
+(function(){
+function isB(u){return u&&u!==ME&&!u.uid}
+function purge(){var i;
+ for(i=P.length-1;i>=0;i--)if(isB(P[i].u))P.splice(i,1);
+ for(i=C.length-1;i>=0;i--)if(isB(C[i].u))C.splice(i,1);
+ for(i=D.length-1;i>=0;i--)if(D[i].grp||isB(D[i].u))D.splice(i,1);
+ for(i=N.length-1;i>=0;i--)if(isB(N[i].u))N.splice(i,1);
+ mine.forEach(function(p){p.r=(p.r||[]).filter(function(r){return typeof r!="string"&&r.u&&!isB(r.u)})});
+ PODS.forEach(function(p){p.col=(p.col||[]).filter(function(u){return!isB(u)});(p.bd||[]).forEach(function(b){b.items=(b.items||[]).filter(function(x){return!isB(x.u)})})});
+ for(i=U.length-1;i>=0;i--)if(isB(U[i]))U.splice(i,1);
+ for(i=FOL.length-1;i>=0;i--)if(BH[FOL[i]])FOL.splice(i,1)}
+var BH={};U.forEach(function(u){if(isB(u))BH[u.h]=1});
+purge();
+simN=function(){};genPosts=function(){};
+var _rp=render;render=function(){purge();return _rp.apply(this,arguments)};
+/* κοινή ροή */
+function nid2(s){var h=0;for(var i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))|0;return 2e6+Math.abs(h)%1e9}
+function tm(t){var m=Math.max(0,Math.round((Date.now()-t)/6e4));return m<1?"τώρα":m<60?m+"λ":m<1440?Math.round(m/60)+"ω":Math.round(m/1440)+"η"}
+window.ZONPOSTS=function(list){var by={},seen={};P.forEach(function(p){if(p.fid)by[p.fid]=p});
+ list.forEach(function(d){if(window.ZUSER&&d.uid===ZUSER.uid)return;seen[d.id]=1;
+  var u=U.filter(function(x){return x.uid===d.uid})[0];if(!u){u={n:d.name||"Χρήστης",h:d.un,g:d.photo?"url('"+d.photo+"') center/cover":G[nid2(d.uid)%6],uid:d.uid};U.push(u)}else if(d.name)u.n=d.name;
+  var p=by[d.id];if(!p){p={id:nid2(d.id),fid:d.id,u:u,t:d.t,im:null,loc:d.loc||"",s:0,e:0,r:[],th:[]};P.push(p)}p.ts=d.ts;p.tm=tm(d.ts)});
+ for(var i=P.length-1;i>=0;i--)if(P[i].fid&&!seen[P[i].fid])P.splice(i,1);
+ P.sort(function(a,b){return(b.ts||0)-(a.ts||0)});
+ if(cur=="home"||cur=="explore"){var v=$("view"),y=v.scrollTop;render();v.scrollTop=y}};
+/* δημοσίευση στην κοινή ροή */
+document.addEventListener("click",function(e){if(!e.target.closest||!e.target.closest('[data-kx="next"]')||!$("cdc"))return;
+ setTimeout(function(){var p=mine[0];if(!window.ZUSER||!window.ZFB||!p||p.fp||p.id!==nid-1||!p.t||$("crt").classList.contains("show"))return;p.fp=1;
+  ZFB.publish(p,ZUSER).then(function(id){p.fid=id;save()}).catch(function(er){p.fp=0;toast("Δεν στάλθηκε στην κοινή ροή ("+(er&&er.code||"σφάλμα")+")")})},150)},true);
+})();
+
 render();
 </script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{getFirestore,doc,getDoc,setDoc,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{getFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,query,orderBy,limit,onSnapshot}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyBz1W_IIb9JQ1rJu2SAIFffUSFgMMdA4Dk",authDomain:"dolphin-80a53.firebaseapp.com",projectId:"dolphin-80a53",storageBucket:"dolphin-80a53.firebasestorage.app",messagingSenderId:"8833059030",appId:"1:8833059030:web:ce12d420bca205f8d32177"};
 const emit=d=>document.dispatchEvent(new CustomEvent("zauth",{detail:d}));
 try{
  const app=initializeApp(cfg),auth=getAuth(app),db=getFirestore(app),prov=new GoogleAuthProvider();
+ window.ZFB={
+  publish:(p,u)=>addDoc(collection(db,"posts"),{uid:u.uid,un:u.un,name:(u.name||"").slice(0,60),photo:u.photo||"",t:String(p.t).slice(0,500),loc:String(p.loc||"").slice(0,80),ts:serverTimestamp()}).then(r=>r.id),
+  watch:cb=>onSnapshot(query(collection(db,"posts"),orderBy("ts","desc"),limit(50)),sn=>cb(sn.docs.map(d=>{const x=d.data();return{id:d.id,uid:x.uid,un:x.un,name:x.name,photo:x.photo,t:x.t,loc:x.loc,ts:x.ts?x.ts.toMillis():Date.now()}})),e=>console.warn("posts",e))};
  window.ZAUTH={
-  signIn:()=>signInWithPopup(auth,prov).catch(e=>{if(e.code=="auth/popup-blocked")return signInWithRedirect(auth,prov);throw e}),
+  signIn:()=>signInWithPopup(auth,prov),
   signOut:()=>signOut(auth)};
  onAuthStateChanged(auth,async u=>{
   if(!u)return emit({user:null});
