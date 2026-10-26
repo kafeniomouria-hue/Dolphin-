@@ -3115,7 +3115,7 @@ b.onclick=function(){b.disabled=true;m.textContent="Άνοιγμα σύνδεσ�
  if(!window.ZAUTH){m.textContent="Η σύνδεση δεν είναι έτοιμη ακόμα.";b.disabled=false;return}
  if(location.protocol=="file:"){m.textContent="Η σύνδεση με Google δουλεύει μόνο από διεύθυνση https:// (όχι από αρχείο στη συσκευή).";b.disabled=false;return}
  ZAUTH.signIn().catch(function(er){b.disabled=false;var c=er&&er.code||"?";m.textContent=c=="auth/popup-closed-by-user"||c=="auth/cancelled-popup-request"?"Η σύνδεση ακυρώθηκε.":c=="auth/unauthorized-domain"?"Η διεύθυνση δεν είναι εγκεκριμένη στο Firebase (Authentication → Settings → Authorized domains). Κωδικός: "+c:c=="auth/popup-blocked"?"Ο browser μπλόκαρε το παράθυρο. Επίτρεψε τα αναδυόμενα παράθυρα ή άνοιξε τη διεύθυνση από Safari/Chrome.":c=="auth/network-request-failed"?"Πρόβλημα δικτύου. Δοκίμασε ξανά.":c=="auth/operation-not-supported-in-this-environment"||c=="auth/web-storage-unsupported"?"Αυτός ο browser δεν υποστηρίζει τη σύνδεση. Άνοιξε τη διεύθυνση από Safari ή Chrome.":"Η σύνδεση απέτυχε. Κωδικός: "+c});
- setTimeout(function(){if(b.disabled&&m.textContent=="Άνοιγμα σύνδεσης…"){b.disabled=false;m.textContent="Δεν άνοιξε παράθυρο σύνδεσης. Επίτρεψε τα αναδυόμενα παράθυρα ή δοκίμασε από Safari/Chrome."}},8000)};
+ setTimeout(function(){if(b.disabled&&m.textContent=="Άνοιγμα σύνδεσης…"){b.disabled=false;m.textContent="Η σύνδεση δεν ολοκληρώθηκε. Δοκίμασε ξανά ή άνοιξε τη διεύθυνση από Chrome."}},60000)};
 gs.onclick=function(){try{sessionStorage.setItem("zguest","1")}catch(e){}guest=true;guestMode()};
 /* κάρτα λογαριασμού στο προφίλ */
 var _pa=profile;profile=function(){var h=_pa();if(!ZU)return h;var c='<div class="card glass" style="padding:12px;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="min-width:0"><small style="color:var(--mute)">Συνδεδεμένος/η με Google</small><br><b>'+esc(ZU.name||"Λογαριασμός")+'</b></span><button class="tag" data-zacc="ask">Αποσύνδεση</button></div>',i=h.indexOf('<div class="tabs glass">');return i<0?h+c:h.slice(0,i)+c+h.slice(i)};
@@ -3165,7 +3165,7 @@ render();
 </script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
-import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,getRedirectResult,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
 import{getFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,query,orderBy,limit,onSnapshot,writeBatch}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyBz1W_IIb9JQ1rJu2SAIFffUSFgMMdA4Dk",authDomain:"dolphin-80a53.firebaseapp.com",projectId:"dolphin-80a53",storageBucket:"dolphin-80a53.firebasestorage.app",messagingSenderId:"8833059030",appId:"1:8833059030:web:ce12d420bca205f8d32177"};
 const emit=d=>document.dispatchEvent(new CustomEvent("zauth",{detail:d}));
@@ -3177,8 +3177,9 @@ try{
  window.ZCLAIM=async(name,h)=>{const u=auth.currentUser,b=writeBatch(db);b.set(doc(db,"usernames",h),{uid:u.uid});
   b.set(doc(db,"users",u.uid),{name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true,createdAt:serverTimestamp(),lastLogin:serverTimestamp()});await b.commit();return{uid:u.uid,name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true}};
  window.ZAUTH={claim:(n,h)=>window.ZCLAIM(n,h),
-  signIn:()=>signInWithPopup(auth,prov),
+  signIn:()=>signInWithPopup(auth,prov).catch(e=>{const c=e&&e.code||'';if(c=='auth/popup-blocked'||c=='auth/operation-not-supported-in-this-environment')return signInWithRedirect(auth,prov);throw e}),
   signOut:()=>signOut(auth)};
+ getRedirectResult(auth).catch(e=>console.warn('redirect',e));
  onAuthStateChanged(auth,async u=>{
   if(!u)return emit({user:null});
   const name=(u.displayName||"").slice(0,60);let info={uid:u.uid,name,photo:u.photoURL||"",un:"",setup:false};
