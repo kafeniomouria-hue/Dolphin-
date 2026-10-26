@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Dolphin</title>
-<script>window.__ZUID="";try{window.__ZUID=(localStorage.getItem("dolphin_uid")||"").replace(/[^\w-]/g,"")}catch(e){}</script>
+<script>document.addEventListener("click",function(e){if(!window.ZGUEST)return;var t=e.target;if(!t.closest||t.closest("#zgbar,#zlogin,#zsetup"))return;if(t.closest("#view,header,nav,#sheet,#crt,button,[data-a]")){e.preventDefault();e.stopImmediatePropagation();if(window.toast)toast("🔒 Συνδέσου για να αλληλεπιδράσεις")}},true);window.__ZUID="";try{window.__ZUID=(localStorage.getItem("dolphin_uid")||"").replace(/[^\w-]/g,"")}catch(e){}</script>
 <script>window.DOLPHIN_WS_URL="";/* π.χ. "wss://o-server-sou.example/dolphin" */</script>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -515,6 +515,11 @@ article.card{content-visibility:auto;contain-intrinsic-size:auto 380px}
 #zlogin.hide{display:none}.zlc{max-width:360px;width:100%}.zlc h1{font-size:34px;margin:6px 0 4px}.zlc h1 small{font-size:12px;font-weight:600;opacity:.8}.zlc p{opacity:.9;margin:0 0 22px}
 .zgbtn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;padding:14px 20px;border:0;border-radius:28px;background:#fff;color:#1f1f1f;font:inherit;font-weight:600;font-size:16px;cursor:pointer}.zgbtn:disabled{opacity:.6;cursor:default}
 #zlm{min-height:22px;margin:14px 0;font-size:14px}.zgst{background:none;border:1px solid rgba(255,255,255,.5);color:#fff;border-radius:20px;padding:8px 16px;font:inherit;cursor:pointer}
+#zsetup{position:fixed;inset:0;z-index:101;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(160deg,#052a4d,#0b5fa8 55%,#00c2d8);color:#fff;text-align:center;overflow:auto}#zsetup[hidden]{display:none}
+.zlbl{display:block;text-align:left;margin:14px 0 4px;font-size:14px;font-weight:600}.zlbl input{display:block;width:100%;margin-top:6px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.14);color:#fff;font:inherit;font-weight:400;font-size:16px}.zlbl input::placeholder{color:rgba(255,255,255,.6)}
+.zat{display:flex;align-items:center;gap:6px;margin-top:6px}.zat i{font-style:normal;font-size:18px}.zat input{margin-top:0}
+#zgbar{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(104px + env(safe-area-inset-bottom,0px));z-index:70;padding:8px 8px 8px 16px;border-radius:24px;background:var(--acc);color:#fff;font-size:14px;font-weight:600;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+#zgbar button{margin-left:10px;border:0;border-radius:16px;background:#fff;color:#0b3a6e;font:inherit;font-weight:700;padding:6px 14px;cursor:pointer}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -523,6 +528,11 @@ article.card{content-visibility:auto;contain-intrinsic-size:auto 380px}
 <div id="zlogin" role="dialog" aria-modal="true" aria-label="Σύνδεση στο Dolphin"><div class="zlc"><div style="font-size:64px" aria-hidden="true">🐬</div><h1>Dolphin <small>Beta 2.0.0</small></h1><p>Συνδέσου για να δημιουργήσεις τον λογαριασμό σου.</p>
 <button id="zgb" class="zgbtn" disabled><svg viewBox="0 0 48 48" aria-hidden="true" width="20" height="20"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>Συνέχεια με Google</button>
 <div id="zlm" role="status" aria-live="polite">Φόρτωση…</div><button id="zgs" class="zgst" hidden>Δοκιμή χωρίς λογαριασμό</button></div></div>
+<div id="zsetup" hidden role="dialog" aria-modal="true" aria-label="Δημιουργία λογαριασμού"><div class="zlc"><h1 style="font-size:26px">Δημιούργησε τον λογαριασμό σου</h1><p>Διάλεξε πώς θα σε βλέπουν οι άλλοι.</p>
+<label class="zlbl">Όνομα<input id="zsn" maxlength="40" autocomplete="name" placeholder="π.χ. Σταύρος"></label>
+<label class="zlbl">Όνομα χρήστη<span class="zat"><i>@</i><input id="zsu" maxlength="20" autocapitalize="none" autocomplete="off" spellcheck="false" placeholder="onoma_xristi"></span></label>
+<small style="opacity:.85">Λατινικά γράμματα, αριθμοί και κάτω παύλα (3 έως 20 χαρακτήρες).</small>
+<div id="zsm" role="status" aria-live="polite" style="min-height:22px;margin:12px 0;font-size:14px"></div><button id="zsb" class="zgbtn" style="justify-content:center">Δημιουργία λογαριασμού</button></div></div>
 <div class="sea" aria-hidden="true"><i></i><i></i></div>
 <div class="app">
 <header>
@@ -2820,7 +2830,7 @@ var CAP={like:30,give:20,cm:10,post:15,time:40};
 function dd(){var s=EX.shl,t=DAY();if(s.day!==t){s.day=t;s.d={}}return s.d}
 function chip(){var c=$("zshc");if(c)c.textContent="🐚 "+EX.shl.bal}
 function gain(n){var g=document.createElement("div");g.className="zgain";g.textContent="+"+n+" 🐚";document.body.appendChild(g);setTimeout(function(){g.remove()},1300)}
-window.SH={add:function(n,why,key){var s=EX.shl,d=dd();
+window.SH={add:function(n,why,key){if(window.ZGUEST)return;var s=EX.shl,d=dd();
  if(key){d[key]=d[key]||0;if(d[key]>=CAP[key])return;n=Math.min(n,CAP[key]-d[key]);d[key]+=n}
  s.bal=Math.max(0,s.bal+n);if(n>0)s.tot+=n;s.log.unshift({n:n,w:why,t:Date.now()});s.log.length=Math.min(s.log.length,100);
  try{save()}catch(e){}chip();if(n>0)gain(n)}};
@@ -2835,7 +2845,7 @@ function walletSheet(){var s=EX.shl,d=dd(),rows=[["Splash που παίρνει�
 /* κέρδη: χρόνος, login, splash που παίρνεις */
 var la=Date.now(),acc=0;["pointerdown","keydown","scroll","touchstart"].forEach(function(t){document.addEventListener(t,function(){la=Date.now()},{passive:true,capture:true})});
 setInterval(function(){if(document.visibilityState=="visible"&&Date.now()-la<60000&&++acc>=120){acc=0;SH.add(1,"Χρόνος στην εφαρμογή","time")}},1000);
-function login(){var s=EX.shl,t=DAY();if(s.last===t)return;s.streak=s.last===DAY(new Date(Date.now()-864e5))?s.streak+1:1;s.last=t;var b=5*Math.min(s.streak,7);SH.add(b,"Check-in · μέρα "+s.streak);setTimeout(function(){toast("🐚 +"+b+" Κοχύλια · σερί "+s.streak+" ημερών")},1200)}
+function login(){if(window.ZGUEST)return;var s=EX.shl,t=DAY();if(s.last===t)return;s.streak=s.last===DAY(new Date(Date.now()-864e5))?s.streak+1:1;s.last=t;var b=5*Math.min(s.streak,7);SH.add(b,"Check-in · μέρα "+s.streak);setTimeout(function(){toast("🐚 +"+b+" Κοχύλια · σερί "+s.streak+" ημερών")},1200)}
 login();setInterval(login,60000);
 var _an=addN;addN=function(k,u,t){if(k=="💧")SH.add(2,"Splash στο Wave σου","like");else if(k=="➕"&&!(arguments[3]&&arguments[3].freq))SH.add(3,"Νέος ακόλουθος","like");var r=_an.apply(this,arguments);window.ZPUSHN&&ZPUSHN(k,u,t);return r};
 /* Anti-Bullying filter */
@@ -3083,20 +3093,30 @@ var g=$("zlogin"),m=$("zlm"),b=$("zgb"),gs=$("zgs"),ZU=null,t0=setTimeout(functi
 function enter(){g.classList.add("hide")}
 function ready(){clearTimeout(t0);b.disabled=false;m.textContent="";gs.hidden=false}
 var guest=false;try{guest=sessionStorage.getItem("zguest")=="1"}catch(e){}
+function finish(u){ZU=window.ZUSER=u;try{sessionStorage.removeItem("zguest")}catch(x){}window.ZGUEST=false;var gb=$("zgbar");if(gb)gb.remove();
+ if(!EX.me||EX.me.un!==u.un){ME.n=u.name||ME.n;ME.un=u.un;EX.me={n:ME.n,bio:ME.bio||"",g:ME.g,un:ME.un};save()}
+ $("zsetup").hidden=true;enter();render();toast("👋 Καλώς ήρθες, "+(u.name||"").split(" ")[0]);if(window.ZFB)ZFB.watch(function(l){window.ZONPOSTS&&ZONPOSTS(l)})}
+function guestMode(){window.ZGUEST=true;enter();if(!$("zgbar")){var d=document.createElement("div");d.id="zgbar";d.innerHTML='👀 Βλέπεις ως επισκέπτης <button>Σύνδεση</button>';d.querySelector("button").onclick=function(){try{sessionStorage.removeItem("zguest")}catch(x){}location.reload()};document.body.appendChild(d)}
+ try{if(window.ZFB)ZFB.watch(function(l){window.ZONPOSTS&&ZONPOSTS(l)})}catch(x){}render()}
+function showSetup(u){var s=$("zsetup");s.hidden=false;$("zsn").value=(u.name||"").slice(0,40);$("zsu").value=(u.name||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9_]/g,"").slice(0,20);
+ $("zsb").onclick=function(){var n=$("zsn").value.trim(),h=$("zsu").value.trim().toLowerCase(),m=$("zsm");
+  if(n.length<1||n.length>40){m.textContent="Γράψε ένα όνομα (έως 40 χαρακτήρες).";return}
+  if(!/^[a-z0-9_]{3,20}$/.test(h)){m.textContent="Το όνομα χρήστη πρέπει να έχει 3 έως 20 λατινικά γράμματα, αριθμούς ή κάτω παύλα.";return}
+  $("zsb").disabled=true;m.textContent="Δημιουργία…";
+  ZAUTH.claim(n,h).then(function(info){finish(info)}).catch(function(er){$("zsb").disabled=false;var c=er&&er.code||"";m.textContent=c=="permission-denied"?"Το όνομα χρήστη είναι ήδη πιασμένο (ή δεν έχουν ενημερωθεί οι κανόνες της βάσης). Δοκίμασε άλλο.":"Δεν δημιουργήθηκε ο λογαριασμός. Κωδικός: "+(c||"?")})}}
 document.addEventListener("zauth",function(e){var d=e.detail||{};clearTimeout(t0);
  if(d.error){b.disabled=true;m.textContent="Δεν ήταν δυνατή η φόρτωση της σύνδεσης. Ανανέωσε τη σελίδα.";gs.hidden=false;return}
- var u=d.user;if(!u){try{localStorage.removeItem("dolphin_uid")}catch(x){}if(guest)return enter();return ready()}
+ var u=d.user;if(!u){try{localStorage.removeItem("dolphin_uid")}catch(x){}if(guest)return guestMode();return ready()}
  var st="";try{st=localStorage.getItem("dolphin_uid")||""}catch(x){}
  if(st!==u.uid){try{localStorage.setItem("dolphin_uid",u.uid)}catch(x){}location.reload();return}
- ZU=window.ZUSER=u;try{sessionStorage.removeItem("zguest")}catch(x){}
- if(!EX.me){ME.n=u.name||ME.n;ME.un=u.un||ME.un;EX.me={n:ME.n,bio:ME.bio||"",g:ME.g,un:ME.un};save()}
- enter();render();toast("👋 Καλώς ήρθες, "+(u.name||"").split(" ")[0]);if(window.ZFB)ZFB.watch(function(l){window.ZONPOSTS&&ZONPOSTS(l)})});
+ if(d.needSetup)return showSetup(u);
+ finish(u)});
 b.onclick=function(){b.disabled=true;m.textContent="Άνοιγμα σύνδεσης…";
  if(!window.ZAUTH){m.textContent="Η σύνδεση δεν είναι έτοιμη ακόμα.";b.disabled=false;return}
  if(location.protocol=="file:"){m.textContent="Η σύνδεση με Google δουλεύει μόνο από διεύθυνση https:// (όχι από αρχείο στη συσκευή).";b.disabled=false;return}
  ZAUTH.signIn().catch(function(er){b.disabled=false;var c=er&&er.code||"?";m.textContent=c=="auth/popup-closed-by-user"||c=="auth/cancelled-popup-request"?"Η σύνδεση ακυρώθηκε.":c=="auth/unauthorized-domain"?"Η διεύθυνση δεν είναι εγκεκριμένη στο Firebase (Authentication → Settings → Authorized domains). Κωδικός: "+c:c=="auth/popup-blocked"?"Ο browser μπλόκαρε το παράθυρο. Επίτρεψε τα αναδυόμενα παράθυρα ή άνοιξε τη διεύθυνση από Safari/Chrome.":c=="auth/network-request-failed"?"Πρόβλημα δικτύου. Δοκίμασε ξανά.":c=="auth/operation-not-supported-in-this-environment"||c=="auth/web-storage-unsupported"?"Αυτός ο browser δεν υποστηρίζει τη σύνδεση. Άνοιξε τη διεύθυνση από Safari ή Chrome.":"Η σύνδεση απέτυχε. Κωδικός: "+c});
  setTimeout(function(){if(b.disabled&&m.textContent=="Άνοιγμα σύνδεσης…"){b.disabled=false;m.textContent="Δεν άνοιξε παράθυρο σύνδεσης. Επίτρεψε τα αναδυόμενα παράθυρα ή δοκίμασε από Safari/Chrome."}},8000)};
-gs.onclick=function(){try{sessionStorage.setItem("zguest","1")}catch(e){}guest=true;enter()};
+gs.onclick=function(){try{sessionStorage.setItem("zguest","1")}catch(e){}guest=true;guestMode()};
 /* κάρτα λογαριασμού στο προφίλ */
 var _pa=profile;profile=function(){var h=_pa();if(!ZU)return h;var c='<div class="card glass" style="padding:12px;margin:0 0 14px;display:flex;justify-content:space-between;align-items:center;gap:10px"><span style="min-width:0"><small style="color:var(--mute)">Συνδεδεμένος/η με Google</small><br><b>'+esc(ZU.name||"Λογαριασμός")+'</b></span><button class="tag" data-zacc="ask">Αποσύνδεση</button></div>',i=h.indexOf('<div class="tabs glass">');return i<0?h+c:h.slice(0,i)+c+h.slice(i)};
 document.addEventListener("click",function(e){var x=e.target.closest&&e.target.closest("[data-zacc]");if(!x)return;e.preventDefault();e.stopPropagation();
@@ -3146,7 +3166,7 @@ render();
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
 import{getAuth,GoogleAuthProvider,signInWithPopup,signInWithRedirect,onAuthStateChanged,signOut}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
-import{getFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,query,orderBy,limit,onSnapshot}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import{getFirestore,doc,getDoc,setDoc,serverTimestamp,collection,addDoc,query,orderBy,limit,onSnapshot,writeBatch}from"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 const cfg={apiKey:"AIzaSyBz1W_IIb9JQ1rJu2SAIFffUSFgMMdA4Dk",authDomain:"dolphin-80a53.firebaseapp.com",projectId:"dolphin-80a53",storageBucket:"dolphin-80a53.firebasestorage.app",messagingSenderId:"8833059030",appId:"1:8833059030:web:ce12d420bca205f8d32177"};
 const emit=d=>document.dispatchEvent(new CustomEvent("zauth",{detail:d}));
 try{
@@ -3154,17 +3174,16 @@ try{
  window.ZFB={
   publish:(p,u)=>addDoc(collection(db,"posts"),{uid:u.uid,un:u.un,name:(u.name||"").slice(0,60),photo:u.photo||"",t:String(p.t).slice(0,500),loc:String(p.loc||"").slice(0,80),ts:serverTimestamp()}).then(r=>r.id),
   watch:cb=>onSnapshot(query(collection(db,"posts"),orderBy("ts","desc"),limit(50)),sn=>cb(sn.docs.map(d=>{const x=d.data();return{id:d.id,uid:x.uid,un:x.un,name:x.name,photo:x.photo,t:x.t,loc:x.loc,ts:x.ts?x.ts.toMillis():Date.now()}})),e=>console.warn("posts",e))};
- window.ZAUTH={
+ window.ZCLAIM=async(name,h)=>{const u=auth.currentUser,b=writeBatch(db);b.set(doc(db,"usernames",h),{uid:u.uid});
+  b.set(doc(db,"users",u.uid),{name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true,createdAt:serverTimestamp(),lastLogin:serverTimestamp()});await b.commit();return{uid:u.uid,name:name.slice(0,40),photo:u.photoURL||"",un:"@"+h,setup:true}};
+ window.ZAUTH={claim:(n,h)=>window.ZCLAIM(n,h),
   signIn:()=>signInWithPopup(auth,prov),
   signOut:()=>signOut(auth)};
  onAuthStateChanged(auth,async u=>{
   if(!u)return emit({user:null});
-  const name=(u.displayName||"").slice(0,60),slug=(name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]+/g,"")||"user").slice(0,14),
-  info={uid:u.uid,name,photo:u.photoURL||"",un:"@"+slug+"_"+u.uid.slice(0,4).toLowerCase()};
-  try{const ref=doc(db,"users",u.uid),s=await getDoc(ref);
-   if(s.exists()){const d=s.data();if(d.un)info.un=d.un;await setDoc(ref,{lastLogin:serverTimestamp()},{merge:true})}
-   else await setDoc(ref,{name,photo:info.photo,un:info.un,createdAt:serverTimestamp(),lastLogin:serverTimestamp()})}catch(e){console.warn("Firestore",e)}
-  emit({user:info})})
+  const name=(u.displayName||"").slice(0,60);let info={uid:u.uid,name,photo:u.photoURL||"",un:"",setup:false};
+  try{const sn=await getDoc(doc(db,"users",u.uid));if(sn.exists()){const d=sn.data();if(d.setup&&d.un){info={uid:u.uid,name:d.name||name,photo:d.photo||info.photo,un:d.un,setup:true}}}}catch(e){console.warn("users",e)}
+  emit({user:info,needSetup:!info.setup})})
 }catch(e){console.error(e);emit({error:1})}
 </script>
 </body>
